@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -278,18 +278,12 @@ export default function Home() {
           <p className="text-white/60 font-body font-light text-lg mt-6">
             Free to try. No account needed for demo. Built for Indian retail investors.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center mt-10">
+          <div className="flex justify-center mt-10">
             <Link
               href="/xray"
-              className="liquid-glass-strong rounded-full text-white font-body font-medium px-6 py-3 inline-flex items-center gap-2"
+              className="liquid-glass-strong rounded-full text-white font-body font-medium px-8 py-4 inline-flex items-center gap-3 text-lg transition-transform hover:scale-105"
             >
-              Analyse My Portfolio <ArrowUpRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/#features"
-              className="bg-white text-black rounded-full font-body font-medium px-6 py-3 inline-flex items-center gap-2"
-            >
-              Explore All Tools
+              Analyse My Portfolio <ArrowUpRight className="w-5 h-5" />
             </Link>
           </div>
 
@@ -390,17 +384,14 @@ function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.1, duration: 0.7, ease: "easeOut" }}
-          className="flex flex-wrap gap-4 justify-center mt-10"
+          className="flex justify-center mt-10"
         >
           <Link
             href="/xray"
-            className="liquid-glass-strong rounded-full text-white font-body font-medium px-6 py-3 inline-flex items-center gap-2"
+            className="liquid-glass-strong rounded-full text-white font-body font-medium px-8 py-4 inline-flex items-center gap-3 text-lg transition-transform hover:scale-105"
           >
-            Analyse My Portfolio <ArrowUpRight className="w-4 h-4" />
+            Analyse My Portfolio <ArrowUpRight className="w-5 h-5" />
           </Link>
-          <button className="text-white/60 hover:text-white inline-flex items-center gap-2 text-sm font-body font-light transition">
-            <Play className="w-4 h-4" /> Watch Demo
-          </button>
         </motion.div>
       </div>
 
