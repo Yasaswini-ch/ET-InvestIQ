@@ -8,9 +8,32 @@ It turns market noise into portfolio-specific guidance for Indian retail investo
 
 ## Impact Model
 
-- 14 crore Indian demat accounts in the addressable market
-- 10 seconds to screen a suspicious message that would normally take minutes of manual judgment
-- 1 portfolio view that connects what is happening in the market to what it means for your holdings
+Back-of-envelope, judge-friendly estimates with explicit assumptions:
+
+1. **Time saved per investor per month**
+- Assumption A: 3 key investing decisions per month (portfolio review, scam-tip check, SIP/risk action)
+- Assumption B: Manual effort is ~35 minutes per decision across apps/news/videos
+- Assumption C: ET InvestIQ reduces this to ~8 minutes per decision
+- Math: `3 × (35 - 8) = 81 minutes saved per month per active investor`
+- Result: **~1.35 hours saved per investor/month**
+
+2. **Potential avoidable loss reduction (behavior + scam filtering)**
+- Assumption A: Investor acts on 1 high-risk tip per quarter without guardrails
+- Assumption B: Average capital exposed per event = `Rs. 25,000`
+- Assumption C: Loss severity in bad outcomes = `12%`
+- Assumption D: Scam Shield + context workflow prevents 40% of such events
+- Math: `25,000 × 12% × 40% = Rs. 1,200 protected per quarter`
+- Result: **~Rs. 4,800/year potential loss avoidance per investor**
+
+3. **Revenue model potential (subscription scenario)**
+- Assumption A: TAM = `14 crore` demat accounts
+- Assumption B: Initial reachable segment = `1% of TAM = 14,00,000 users`
+- Assumption C: Paid conversion within reachable segment = `2%`
+- Assumption D: Subscription price = `Rs. 299/month`
+- Math: `14,00,000 × 2% × 299 = Rs. 83,72,000 MRR`
+- Result: **~Rs. 8.37 crore MRR (~Rs. 100.5 crore ARR)**
+
+These are directional estimates, not audited forecasts, but the logic is transparent and tied to concrete user workflows in the product.
 
 ## Demo Flow
 
