@@ -15,12 +15,15 @@ Built with Next.js 14, TypeScript, Tailwind CSS, and Google Gemini. Five tools i
 | `/radar` | Opportunity Radar | BSE + NSE + SEBI feeds → AI-ranked signals with conviction |
 | `/chat` | Market Intelligence | Live market context + portfolio awareness + cited AI answers |
 | `/charts` | Chart Intelligence | Real OHLCV from Yahoo Finance + AI pattern detection |
+| `/scamcheck` | ScamShield | Detect fraudulent investment messages + volume anomalies |
+| `/sip` | SIP Tools | SIP Time Machine + AI Goal-Based Planning |
+| `/briefing` | My Briefing | AI-generated daily summary of your portfolio vs. market |
 | `/newbies` | Newbie Corner | Flip-card learning + daily market challenge with streaks |
 | `/help` | Help | Quick links to key features |
 
 ---
 
-## The Five Tools
+## The Core Tools
 
 ### 1. Portfolio X-Ray — `/xray`
 
@@ -116,6 +119,36 @@ Each card shows a question on the front, an explanation on the back, and one imm
 - One market scenario question per day, adapted to live Nifty movement
 - Correct answer builds your streak (tracked in localStorage)
 - Progress tracker: concepts learned / 20 goal
+
+---
+
+## New Intelligence Features
+
+### 6. ScamShield — `/scamcheck`
+
+A specialized AI tool to detect fraudulent investment schemes and "pump and dump" messages common in social media and messaging groups.
+
+**Capabilities:**
+- **Message Analysis:** Paste a suspicious message to detect red flags like "guaranteed returns," "secret group," or "urgent action."
+- **Volume Anomaly Check:** Automatically checks if a mentioned ticker is experiencing suspicious volume spikes (potential pump and dump).
+- **Scam Verdict:** AI provides a verdict (LIKELY SCAM, SUSPICIOUS, PROBABLY SAFE) with specific reasoning and red flag detection.
+
+### 7. SIP Tools & Time Machine — `/sip`
+
+Advanced planning tools for systematic investors.
+
+**Features:**
+- **SIP Time Machine:** "Rewind the market" to see exactly how much your SIP would be worth today if you had started years ago in a specific fund. Uses actual historical NAV data.
+- **Goal-Based Planning:** AI-assisted calculator that helps you determine exactly how much you need to save per month to reach goals like buying a home, children's education, or retirement, adjusted for inflation.
+
+### 8. My Briefing — `/briefing`
+
+A personalized AI-generated executive summary for your investments.
+
+**How it works:**
+- Cross-references your current **Portfolio X-Ray** results with the latest **Opportunity Radar** signals and **Market Mood**.
+- Generates a "Headline of the Day" specifically for your financial situation.
+- Provides prioritized alerts (High/Medium/Low) with clear action steps and links to relevant platform features.
 
 ---
 
