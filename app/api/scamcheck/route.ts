@@ -23,7 +23,7 @@ const TICKER_MAP: Record<string, string> = {
   "paytm": "PAYTM.NS",
 }
 
-export function extractTicker(message: string): string | null {
+function extractTicker(message: string): string | null {
   const lower = message.toLowerCase()
 
   for (const [key, ticker] of Object.entries(TICKER_MAP)) {
