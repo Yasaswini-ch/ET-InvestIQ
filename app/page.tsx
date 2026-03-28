@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
+  MessageCircleMore,
   Zap,
   TrendingUp,
   Shield,
   BookOpen,
+  X,
 } from "lucide-react";
 import BlurText from "@/components/BlurText";
+import ChatDrawer from "@/components/ChatDrawer";
 
 const sectionMotion = {
   initial: { opacity: 0, y: 40 },
@@ -29,10 +33,12 @@ const tickerItems = [
 ] as const;
 
 const navItems = [
-  { label: "Platform", href: "/xray" },
+  { label: "My Portfolio", href: "/xray" },
   { label: "Features", href: "/#features" },
-  { label: "Radar", href: "/radar" },
-  { label: "Scam Shield", href: "/scamcheck" },
+  { label: "Markets", href: "/radar" },
+  { label: "Protect", href: "/scamcheck" },
+  { label: "Learn", href: "/newbies" },
+  { label: "Chat ✦", href: "/chat" },
 ] as const;
 
 const tools = [
@@ -159,6 +165,17 @@ const testimonials = [
 ];
 
 export default function Home() {
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [hasPortfolioContext, setHasPortfolioContext] = useState(false);
+
+  useEffect(() => {
+    try {
+      setHasPortfolioContext(Boolean(localStorage.getItem("xray_result")));
+    } catch {
+      setHasPortfolioContext(false);
+    }
+  }, []);
+
   return (
     <main className="bg-black overflow-x-hidden">
         <Navbar />
@@ -327,6 +344,22 @@ export default function Home() {
           </footer>
         </motion.div>
       </section>
+
+      <button
+        onClick={() => setChatDrawerOpen((open) => !open)}
+        className="fixed right-4 top-1/2 -translate-y-1/2 z-[999] liquid-glass-strong inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-emerald-300 shadow-2xl shadow-black/40 border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-xl hover:border-emerald-400/50 hover:bg-emerald-500/15 transition-all"
+        aria-label={chatDrawerOpen ? "Close AI Assistant" : "Open AI Assistant"}
+      >
+        {hasPortfolioContext && !chatDrawerOpen && (
+          <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-pulse" />
+        )}
+        <span className={hasPortfolioContext ? "text-emerald-400 animate-pulse" : ""}>
+          {chatDrawerOpen ? <X className="w-4 h-4" /> : <MessageCircleMore className="w-4 h-4" />}
+        </span>
+        <span>Ask AI</span>
+      </button>
+
+      <ChatDrawer isOpen={chatDrawerOpen} onClose={() => setChatDrawerOpen(false)} />
     </main>
   );
 }
@@ -334,30 +367,29 @@ export default function Home() {
 function Navbar() {
   return (
     <div className="fixed top-4 left-0 right-0 z-50 px-6">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-white">
+      <div className="max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="justify-self-start flex items-center gap-2 text-white">
           <span className="text-xl font-heading italic">ET InvestIQ</span>
           <span className="text-emerald-400 text-xs">●</span>
         </div>
 
-        <div className="liquid-glass rounded-full px-2 py-2 flex gap-1">
+        <div className="justify-self-center liquid-glass rounded-full px-2 py-2 flex gap-1">
           {navItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="text-sm font-medium text-white/80 px-4 py-1.5 rounded-full hover:bg-white/10 transition font-body"
+              className={`text-sm font-medium px-4 py-1.5 rounded-full transition font-body ${
+                item.label === "Chat ✦"
+                  ? "text-emerald-300 hover:bg-emerald-500/15"
+                  : "text-white/80 hover:bg-white/10"
+              }`}
             >
               {item.label}
             </Link>
           ))}
         </div>
 
-        <Link
-          href="/xray"
-          className="liquid-glass-strong rounded-full text-sm font-medium text-white px-5 py-2 inline-flex items-center gap-2 font-body"
-        >
-          Launch App <ArrowUpRight className="w-4 h-4" />
-        </Link>
+        <div className="justify-self-end" />
       </div>
     </div>
   );
@@ -719,3 +751,5 @@ function IntelligenceVisual() {
     </div>
   );
 }
+
+

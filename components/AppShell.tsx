@@ -3,27 +3,28 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, MessageCircleMore, Shield, X } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { MessageCircleMore, X } from "lucide-react";
 import ChatDrawer from "@/components/ChatDrawer";
 
 interface NavItem {
   label: string;
   href: string;
-  icon?: LucideIcon;
   accent?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "X-Ray", href: "/xray" },
-  { label: "Radar", href: "/radar" },
-  { label: "SIP Tools", href: "/sip" },
-  { label: "Scam Shield", href: "/scamcheck", icon: Shield, accent: "text-red-400" },
+  { label: "My Portfolio", href: "/xray" },
+  { label: "Features", href: "/#features" },
+  { label: "Markets", href: "/radar" },
+  { label: "Protect", href: "/scamcheck", accent: "text-red-400" },
+  { label: "Learn", href: "/newbies" },
+  { label: "Chat ✦", href: "/chat", accent: "text-emerald-400" },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "/";
   const isLanding = pathname === "/";
+  const isChatPage = pathname === "/chat";
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [hasPortfolioContext, setHasPortfolioContext] = useState(false);
 
@@ -46,16 +47,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="bg-black text-white min-h-screen">
       {!isLanding && (
         <nav className="fixed top-4 left-0 right-0 z-50 px-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between liquid-glass-strong rounded-full px-5 py-2.5">
-            <Link href="/" className="flex items-center gap-2 font-heading italic text-lg font-normal text-white">
+          <div className="max-w-7xl mx-auto flex items-center gap-4 liquid-glass-strong rounded-full px-5 py-2.5">
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-heading italic text-lg font-normal text-white shrink-0"
+            >
               ET InvestIQ
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
             </Link>
 
-            <div className="hidden md:flex items-center gap-1 liquid-glass rounded-full px-2 py-1">
+            <div className="hidden md:flex items-center gap-1 liquid-glass rounded-full px-2 py-1 flex-1 justify-center">
               {NAV_ITEMS.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
@@ -68,19 +71,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         : "text-white/70 hover:text-white"
                     }`}
                   >
-                    {Icon && <Icon className="w-3.5 h-3.5" />}
                     {item.label}
                   </Link>
                 );
               })}
             </div>
-
-            <Link
-              href="/xray"
-              className="liquid-glass-strong rounded-full px-4 py-2 text-sm font-semibold text-white flex items-center gap-1.5 hover:bg-white/10 transition-all"
-            >
-              Launch App <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
         </nav>
       )}
@@ -88,21 +83,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      <button
-        onClick={() => setChatDrawerOpen((open) => !open)}
-        className={`fixed right-4 top-1/2 -translate-y-1/2 z-[999] liquid-glass-strong inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-emerald-300 shadow-2xl shadow-black/40 border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-xl`}
-        aria-label={chatDrawerOpen ? "Close AI Assistant" : "Open AI Assistant"}
-      >
-        {hasPortfolioContext && !chatDrawerOpen && (
-          <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-pulse" />
-        )}
-        <span className={`${hasPortfolioContext ? "text-emerald-400 animate-pulse" : ""}`}>
-          {chatDrawerOpen ? <X className="w-4 h-4" /> : <MessageCircleMore className="w-4 h-4" />}
-        </span>
-        <span>Ask AI</span>
-      </button>
+      {!isChatPage && (
+        <>
+          <button
+            onClick={() => setChatDrawerOpen((open) => !open)}
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-[999] liquid-glass-strong inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-emerald-300 shadow-2xl shadow-black/40 border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-xl hover:border-emerald-400/50 hover:bg-emerald-500/15 transition-all"
+            aria-label={chatDrawerOpen ? "Close AI Assistant" : "Open AI Assistant"}
+          >
+            {hasPortfolioContext && !chatDrawerOpen && (
+              <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-pulse" />
+            )}
+            <span className={hasPortfolioContext ? "text-emerald-400 animate-pulse" : ""}>
+              {chatDrawerOpen ? <X className="w-4 h-4" /> : <MessageCircleMore className="w-4 h-4" />}
+            </span>
+            <span>Ask AI</span>
+          </button>
 
-      <ChatDrawer isOpen={chatDrawerOpen} onClose={() => setChatDrawerOpen(false)} />
+          <ChatDrawer isOpen={chatDrawerOpen} onClose={() => setChatDrawerOpen(false)} />
+        </>
+      )}
     </div>
   );
 }
+

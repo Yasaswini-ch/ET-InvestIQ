@@ -36,6 +36,41 @@ const INJECTION_PATTERNS = [
   /act as if/i,
 ];
 
+function buildFallbackChatAnswer(latestUser: string, ticker?: string | null) {
+  const lower = latestUser.toLowerCase();
+  if (lower.includes("sip")) {
+    return {
+      answer:
+        "If your emergency fund is in place and your cash flow is comfortable, increasing your SIP by 10% to 15% is a sensible long-term move. If money is tight, keep the SIP unchanged for now and revisit it after one or two months.",
+      suggested: [
+        "How should I size my SIP increase?",
+        "What is the safest way to invest a bonus?",
+      ],
+    };
+  }
+
+  if (lower.includes("xirr")) {
+    return {
+      answer:
+        "XIRR is the annualized return that accounts for when you invested and when you withdrew. It is usually more useful than simple CAGR for portfolios with multiple cash flows.",
+      suggested: [
+        "How is XIRR different from CAGR?",
+        "Can you explain portfolio overlap?",
+      ],
+    };
+  }
+
+  const focus = ticker ? ` for ${ticker}` : "";
+  return {
+    answer:
+      `I am having a temporary issue pulling live market context${focus}. For now, keep decisions conservative: verify the thesis, check your cash buffer, and avoid acting on a single headline.`,
+    suggested: [
+      "What is the current market mood?",
+      "Should I buy, hold, or wait?",
+    ],
+  };
+}
+
 async function loadSignals() {
   try {
     const [bseRes, nseRes, sebiRes] = await Promise.allSettled([
@@ -108,8 +143,10 @@ export async function POST(req: NextRequest) {
       signals: relevant.length ? relevant : signals.slice(0, 3),
     });
 
-    const ai = await generateStructuredJSON<{ answer: string; suggested: string[] }>(
-      `User conversation:
+    let ai: { answer: string; suggested: string[] } | null = null;
+    try {
+      ai = await generateStructuredJSON<{ answer: string; suggested: string[] }>(
+        `User conversation:
 ${JSON.stringify(messages, null, 2)}
 
 Live context:
@@ -122,12 +159,19 @@ ${JSON.stringify(
   null,
   2
 )}`,
-      SYSTEM
-    );
+        SYSTEM
+      );
+    } catch (error) {
+      console.warn("Chat model fallback engaged:", error);
+    }
+
+    const fallback = buildFallbackChatAnswer(latestUser, ticker);
+    const answer = ai?.answer?.trim() ? ai.answer : fallback.answer;
+    const suggested = Array.isArray(ai?.suggested) && ai?.suggested.length > 0 ? ai.suggested : fallback.suggested;
 
     const payload: ChatResponsePayload = {
-      answer: ai.answer,
-      suggested: Array.isArray(ai.suggested) ? ai.suggested.slice(0, 2) : [],
+      answer,
+      suggested: suggested.slice(0, 2),
       sources: buildSources({
         market,
         signals: relevant.length ? relevant : signals,
@@ -139,13 +183,14 @@ ${JSON.stringify(
     return NextResponse.json(payload);
   } catch (error) {
     console.error("Chat API failed:", error);
+    const fallback = buildFallbackChatAnswer("market update");
     return NextResponse.json(
       {
-        answer: "I hit a temporary issue while fetching live context. Please retry in a few seconds.",
-        suggested: ["Can you summarize today's market mood?", "What are the top risks right now?"],
+        answer: fallback.answer,
+        suggested: fallback.suggested,
         sources: [],
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }
