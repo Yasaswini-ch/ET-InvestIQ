@@ -13,6 +13,8 @@ import { enrichSignalsWithQuotes } from "@/lib/radar/enrich";
 import { normalizeEventsToSignals } from "@/lib/radar/normalize";
 import { rankSignals } from "@/lib/radar/scoring";
 import { ChatRequestBody, ChatResponsePayload } from "@/lib/types/chat";
+import { MarketSnapshot } from "@/lib/types/market";
+import { RadarSignal } from "@/lib/types/radar";
 import { getIndianMarketData, getStockQuote } from "@/lib/yfinance";
 
 const SYSTEM = `You are ET Markets AI - India's smartest investment assistant.
@@ -36,8 +38,89 @@ const INJECTION_PATTERNS = [
   /act as if/i,
 ];
 
-function buildFallbackChatAnswer(latestUser: string, ticker?: string | null) {
+function formatMove(changePercent?: number | null) {
+  if (typeof changePercent !== "number" || !Number.isFinite(changePercent)) return null;
+  const direction = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "flat";
+  return `${Math.abs(changePercent).toFixed(2)}% ${direction}`;
+}
+
+function describeMarketMood(market: MarketSnapshot, signals: RadarSignal[]) {
+  const niftyMove = formatMove(market.nifty?.changePercent);
+  const sensexMove = formatMove(market.sensex?.changePercent);
+  const topSignal = signals[0];
+
+  const moodPieces: string[] = [];
+  if (niftyMove || sensexMove) {
+    moodPieces.push(
+      `The market tone is ${niftyMove && sensexMove ? `Nifty ${niftyMove} and Sensex ${sensexMove}` : niftyMove ? `Nifty is ${niftyMove}` : `Sensex is ${sensexMove}`}.`
+    );
+  }
+
+  if (topSignal) {
+    moodPieces.push(
+      `A watchpoint is ${topSignal.companyName} (${topSignal.ticker.replace(".NS", "")}) with ${topSignal.conviction} conviction and ${topSignal.timeframe} time frame.`
+    );
+  }
+
+  if (!moodPieces.length) {
+    moodPieces.push("Market mood looks mixed, so keep sizing disciplined and avoid chasing a single headline.");
+  }
+
+  return moodPieces.join(" ");
+}
+
+function buildFallbackChatAnswer(
+  latestUser: string,
+  options: { ticker?: string | null; market: MarketSnapshot; signals: RadarSignal[] }
+) {
   const lower = latestUser.toLowerCase();
+  const ticker = options.ticker;
+  const mood = describeMarketMood(options.market, options.signals);
+
+  if (lower.includes("buy") || lower.includes("hold") || lower.includes("wait")) {
+    return {
+      answer:
+        `${mood} If you are deciding whether to buy, hold, or wait, prefer a staged approach: keep a cash buffer, add only if the thesis is clear, and avoid moving all at once on a single headline.`,
+      suggested: [
+        "What risk should I check first?",
+        "How do I stage an entry?",
+      ],
+    };
+  }
+
+  if (lower.includes("market mood") || lower.includes("current market") || lower.includes("nifty")) {
+    return {
+      answer:
+        `${mood} Stay selective, keep position sizes modest, and let price action confirm the thesis before adding risk.`,
+      suggested: [
+        "Which sectors look strongest?",
+        "What should I avoid right now?",
+      ],
+    };
+  }
+
+  if (lower.includes("portfolio") || lower.includes("risk") || lower.includes("overlap")) {
+    return {
+      answer:
+        "For portfolio risk, check three things first: concentration in one stock or sector, overlap across funds, and whether your cash buffer is large enough for the next 6 months. If one bucket is dominating, reduce size before adding new ideas.",
+      suggested: [
+        "How do I reduce overlap?",
+        "What is a healthy portfolio split?",
+      ],
+    };
+  }
+
+  if (lower.includes("fund") || lower.includes("large cap") || lower.includes("mutual fund")) {
+    return {
+      answer:
+        "For large-cap fund research, focus on 3 things: low expense ratio, long-term consistency versus benchmark, and low overlap with the rest of your portfolio. If you want a shortlist, study index funds and stable flexi-cap funds before chasing short-term winners.",
+      suggested: [
+        "How do I compare large cap funds?",
+        "What should I check before investing in a fund?",
+      ],
+    };
+  }
+
   if (lower.includes("sip")) {
     return {
       answer:
@@ -60,10 +143,31 @@ function buildFallbackChatAnswer(latestUser: string, ticker?: string | null) {
     };
   }
 
-  const focus = ticker ? ` for ${ticker}` : "";
+  if (lower.includes("budget") || lower.includes("tax")) {
+    return {
+      answer:
+        "For Budget or tax changes, first separate noise from impact. Check whether the change affects equity, debt, or retirement savings, then estimate the rupee impact on your own holdings before making any move.",
+      suggested: [
+        "How does this affect my SIP?",
+        "Should I change anything now?",
+      ],
+    };
+  }
+
+  if (lower.includes("sector") || lower.includes("industry")) {
+    return {
+      answer:
+        `${mood} For sector questions, compare earnings momentum, valuation comfort, and capital allocation discipline. Strong sectors usually have both earnings support and reasonable expectations.`,
+      suggested: [
+        "Which sector is most defensive?",
+        "Where is the risk highest?",
+      ],
+    };
+  }
+
   return {
     answer:
-      `I am having a temporary issue pulling live market context${focus}. For now, keep decisions conservative: verify the thesis, check your cash buffer, and avoid acting on a single headline.`,
+      `${mood}${ticker ? ` If you are focused on ${ticker}, keep the thesis simple and verify the quote before acting.` : " For any new position, size it slowly, keep a cash buffer, and verify the thesis before acting."}`,
     suggested: [
       "What is the current market mood?",
       "Should I buy, hold, or wait?",
@@ -165,7 +269,7 @@ ${JSON.stringify(
       console.warn("Chat model fallback engaged:", error);
     }
 
-    const fallback = buildFallbackChatAnswer(latestUser, ticker);
+    const fallback = buildFallbackChatAnswer(latestUser, { ticker, market, signals });
     const answer = ai?.answer?.trim() ? ai.answer : fallback.answer;
     const suggested = Array.isArray(ai?.suggested) && ai?.suggested.length > 0 ? ai.suggested : fallback.suggested;
 
@@ -183,7 +287,11 @@ ${JSON.stringify(
     return NextResponse.json(payload);
   } catch (error) {
     console.error("Chat API failed:", error);
-    const fallback = buildFallbackChatAnswer("market update");
+    const fallback = buildFallbackChatAnswer("market update", {
+      ticker: null,
+      market: { nifty: null, sensex: null, usdInr: null, gold: null },
+      signals: [],
+    });
     return NextResponse.json(
       {
         answer: fallback.answer,
