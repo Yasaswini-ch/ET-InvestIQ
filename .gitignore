@@ -17,6 +17,13 @@
 .DS_Store
 *.pem
 
+# local agent/editor state
+.claude/
+
+# local logs
+*.log
+typescript-errors.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*
