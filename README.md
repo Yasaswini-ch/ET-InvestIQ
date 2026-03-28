@@ -179,15 +179,11 @@ The app includes several hardening and fallback measures:
 | Market Data | Yahoo Finance and exchange feeds |
 | Parsing | `pdf-parse`, `fast-xml-parser`, `papaparse` |
 
----
-
 ## Project Structure, API & Deployment
 
 - **Project Structure**: See [STRUCTURE.md](./STRUCTURE.md)
 - **API Documentation**: See [API.md](./API.md)
 - **Vercel Deployment Guide**: See [DEPLOY.md](./DEPLOY.md)
-
----
 
 ## Getting Started
 
