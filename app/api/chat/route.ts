@@ -1,3 +1,4 @@
+import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -57,9 +58,25 @@ async function safeMarketData() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  if (!rateLimit(ip, 5, 60_000)) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute." },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = (await req.json()) as ChatRequestBody;
-    const messages = body.messages || [];
+    const MAX_MSG_LENGTH = 600;
+    const MAX_MESSAGES = 10;
+    const rawMessages = body.messages || [];
+    const messages = rawMessages
+      .slice(-MAX_MESSAGES)
+      .map((m: any) => ({
+        role: m.role,
+        content: String(m.content).slice(0, MAX_MSG_LENGTH),
+      }));
     const latestUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
     const ticker = body.focusTicker || extractTickerFromText(latestUser);
 

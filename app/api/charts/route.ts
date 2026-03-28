@@ -1,3 +1,4 @@
+import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
 import { summarizeCandles } from "@/lib/chart-analysis";
 import { generateStructuredJSON } from "@/lib/gemini";
@@ -18,15 +19,31 @@ successRate must be an AI-estimated historical probability between 1 and 99.
 confidence must be between 1 and 100.`;
 
 export async function GET(req: NextRequest) {
+  const ip = getIP(req);
+  if (!rateLimit(ip, 8, 60_000)) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute." },
+      { status: 429 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const ticker = normalizeNseTicker(searchParams.get("ticker") || "RELIANCE");
     const range = searchParams.get("range") || "6mo";
     const interval = searchParams.get("interval") || "1d";
 
-    const candles = await getHistoricalOHLCV(ticker, range, interval);
+    let candles;
+    try {
+      candles = await getHistoricalOHLCV(ticker, range, interval);
+    } catch {
+      return NextResponse.json(
+        { error: `Ticker "${ticker}" not found on Yahoo Finance. Try full NSE symbols like TATAMOTORS, HDFCBANK, or RELIANCE.` },
+        { status: 422 }
+      );
+    }
     if (candles.length < 30) {
-      return NextResponse.json({ error: "Not enough candle data for analysis" }, { status: 422 });
+      return NextResponse.json({ error: `Not enough historical data for "${ticker}". Try a longer range or a different ticker.` }, { status: 422 });
     }
 
     const summary = summarizeCandles(candles);
@@ -77,7 +94,8 @@ Also include 1 to 3 "similarHistorical" lines in this style:
 
     return NextResponse.json(payload);
   } catch (error) {
-    console.error("Charts API failed:", error);
-    return NextResponse.json({ error: "Failed to analyze chart patterns" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Charts API failed:", message);
+    return NextResponse.json({ error: `Analysis failed: ${message}` }, { status: 500 });
   }
 }

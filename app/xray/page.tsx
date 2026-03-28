@@ -24,6 +24,7 @@ import OverlapHeatmap from "@/components/OverlapHeatmap";
 import RebalancingPlan from "@/components/RebalancingPlan";
 import FundDetailsTable from "@/components/FundDetailsTable";
 import { formatCompactINR, formatINR } from "@/lib/utils";
+import ShareCard from "@/components/ShareCard";
 
 export default function XRayPage() {
   const [analysis, setAnalysis] = useState<any>(null);
@@ -75,6 +76,7 @@ export default function XRayPage() {
           rebalancingSummary: data.rebalancingPlan?.summary,
         };
         localStorage.setItem("et_portfolio_context", JSON.stringify(portfolioContext));
+        localStorage.setItem("xray_result", JSON.stringify(data));
       } catch {
         // Ignore local storage failures.
       }
@@ -359,6 +361,9 @@ function Results({ analysis, revealStep }: { analysis: any; revealStep: number }
         <div className="liquid-glass rounded-2xl p-7 flex flex-col items-center justify-center">
           <HealthScoreRing score={analysis.portfolioHealthScore} />
           <p className="mt-4 text-xs font-bold text-white/60 uppercase tracking-widest">Portfolio Health</p>
+          <div className="mt-6 w-full">
+            <ShareCard investorName={analysis.investorName} healthScore={analysis.portfolioHealthScore} xirr={analysis.overallXIRR} currentValue={analysis.currentValue} alpha={analysis.benchmarkComparison?.alpha || 0} />
+          </div>
           <p className="mt-1 text-xs text-white/60">
             {analysis.riskProfile} risk profile - Alpha {analysis.benchmarkComparison?.alpha?.toFixed?.(1) ?? analysis.benchmarkComparison?.alpha}%
           </p>

@@ -1,3 +1,4 @@
+import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server"; 
  import pdfParse from "pdf-parse"; 
  import { generateJSON } from "@/lib/gemini"; 
@@ -77,7 +78,15 @@ import { NextRequest, NextResponse } from "next/server";
  - topHoldings: top 5 stocks across all funds combined 
  `; 
  
- export async function POST(req: NextRequest) { 
+ export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  if (!rateLimit(ip, 3, 60_000)) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute." },
+      { status: 429 }
+    );
+  }
+ 
    try { 
      const formData = await req.formData(); 
      const file = formData.get("pdf") as File; 
@@ -88,7 +97,37 @@ import { NextRequest, NextResponse } from "next/server";
        return NextResponse.json(samplePortfolio); 
      } 
  
-     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 }); 
+     if (!file && !useSample) {
+      return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
+    }
+
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "File too large. Maximum size is 10MB." },
+          { status: 413 }
+        );
+      }
+      if (!file.name.toLowerCase().endsWith(".pdf")) {
+        return NextResponse.json(
+          { error: "Only PDF files are accepted." },
+          { status: 400 }
+        );
+      }
+      const headerBuffer = await file.arrayBuffer();
+      const header = new Uint8Array(headerBuffer.slice(0, 4));
+      const isPDF =
+        header[0] === 0x25 &&
+        header[1] === 0x50 &&
+        header[2] === 0x44 &&
+        header[3] === 0x46;
+      if (!isPDF) {
+        return NextResponse.json(
+          { error: "Invalid file format. Please upload a real PDF." },
+          { status: 400 }
+        );
+      }
+    } 
  
      const buffer = Buffer.from(await file.arrayBuffer()); 
      const parsed = await pdfParse(buffer); 

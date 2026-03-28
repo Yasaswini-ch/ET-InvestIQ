@@ -8,8 +8,6 @@
   --accent: 142 69% 58%;
   --border: 0 0% 100% / 0.2;
   --radius: 9999px;
-  --font-heading: "Instrument Serif", serif;
-  --font-body: "Barlow", sans-serif;
 }
 
 * {
@@ -21,7 +19,7 @@
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-body);
+  font-family: var(--font-barlow), 'Barlow', sans-serif;
   min-height: 100vh;
 }
 

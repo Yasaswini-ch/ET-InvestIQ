@@ -1,112 +1,87 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { generateStructuredJSON } from "@/lib/gemini";
-import { fetchBseAnnouncements } from "@/lib/feeds/bse";
-import { fetchNseBulkDeals } from "@/lib/feeds/nse";
-import { fetchSebiFeed } from "@/lib/feeds/sebi";
-import { enrichSignalsWithQuotes } from "@/lib/radar/enrich";
-import { normalizeEventsToSignals } from "@/lib/radar/normalize";
-import { rankSignals } from "@/lib/radar/scoring";
-import { PortfolioChatContext } from "@/lib/types/chat";
-import { getIndianMarketData } from "@/lib/yfinance";
+import { rateLimit, getIP } from "@/lib/rateLimit";
 
-export const dynamic = "force-dynamic";
+const SYSTEM = `You are ET InvestIQ's personal AI briefing engine for Indian retail investors.
+Your job: connect a user's portfolio to today's market context and generate highly specific, actionable alerts.
+Rules:
+- Be specific: use real fund names, stock tickers, SEBI rule numbers if relevant
+- Every alert must have a clear action the user can take RIGHT NOW
+- Cross-reference portfolio holdings with market signals wherever possible
+- If portfolio data is unavailable, give market-wide alerts that any Indian investor would care about
+- Always return valid JSON only`;
 
-type BriefingResponse = {
-  headline: string;
-  summary: string;
-  marketPulse: "risk_on" | "neutral" | "risk_off";
-  priorities: string[];
-  opportunities: string[];
-  risks: string[];
-  actionPlan: string[];
-};
+function buildPrompt(portfolioContext: Record<string, unknown> | null) {
+  const today = new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-const SYSTEM = `You are the chief investment editor for ET InvestIQ.
-Create a concise personalized daily financial briefing.
-Use portfolio context + live market snapshot + live radar signals.
-Style: specific, practical, no hype.
-Return valid JSON only.`;
+  const portfolioSection = portfolioContext
+    ? `
+INVESTOR PORTFOLIO:
+- Investor: ${portfolioContext.investorName}
+- Total invested: ₹${Number(portfolioContext.totalInvested)?.toLocaleString("en-IN")}
+- Current value: ₹${Number(portfolioContext.currentValue)?.toLocaleString("en-IN")}
+- XIRR: ${portfolioContext.overallXIRR}%
+- Health score: ${portfolioContext.portfolioHealthScore}/100
+- Risk profile: ${portfolioContext.riskProfile}
+- Funds held: ${(portfolioContext.funds as {name: string}[])?.map((f) => f.name).join(", ")}
+- Key issues: ${(portfolioContext.insights as {title: string}[])?.map((i) => i.title).join("; ")}
+`
+    : "No portfolio uploaded — generate general market alerts for an Indian retail investor.";
 
-async function loadSignals() {
-  const [bseRes, nseRes, sebiRes] = await Promise.allSettled([
-    fetchBseAnnouncements(),
-    fetchNseBulkDeals(),
-    fetchSebiFeed(),
-  ]);
+  return `
+Today is ${today}. Generate a personalised daily briefing for this investor.
 
-  const events = [];
-  if (bseRes.status === "fulfilled") events.push(...bseRes.value);
-  if (nseRes.status === "fulfilled") events.push(...nseRes.value);
-  if (sebiRes.status === "fulfilled") events.push(...sebiRes.value);
-  if (!events.length) return [];
+${portfolioSection}
 
-  const normalized = normalizeEventsToSignals(events);
-  const enriched = await enrichSignalsWithQuotes(normalized);
-  return rankSignals(enriched, 6);
+Return this exact JSON:
+{
+  "generatedAt": "ISO timestamp",
+  "investorName": "${portfolioContext?.investorName ?? "Investor"}",
+  "marketMood": "one phrase like 'Cautiously Bullish' or 'Risk-Off Mode'",
+  "moodEmoji": "one emoji",
+  "headline": "One punchy sentence summarising today's most important insight for this investor",
+  "alerts": [
+    {
+      "id": "alert_1",
+      "severity": "high" | "medium" | "low",
+      "category": "portfolio" | "market" | "opportunity" | "action",
+      "title": "Short alert title (max 8 words)",
+      "detail": "2-3 sentences with specific data, fund names, or tickers. Be concrete.",
+      "action": "One specific thing the investor should do today",
+      "linkedFeature": "/xray" | "/radar" | "/charts" | "/chat",
+      "linkedLabel": "Short label like 'View in X-Ray' or 'See Radar Signal'"
+    }
+  ],
+  "topOpportunity": "1-2 sentences on the best opportunity for this investor right now",
+  "urgentAction": "The single most important thing to do this week"
+}
+
+Generate 4-6 alerts. Mix categories. At least one must reference a specific fund or stock.
+If portfolio data is available, at least 2 alerts must directly reference their holdings.
+`;
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  if (!rateLimit(ip, 3, 60_000)) {
+    return Response.json({ error: "Too many requests." }, { status: 429 });
+  }
+
   try {
-    const body = await req.json().catch(() => ({}));
-    const portfolioContext = (body?.portfolioContext ?? null) as PortfolioChatContext | null;
-
-    const [market, signals] = await Promise.all([getIndianMarketData(), loadSignals()]);
-
-    const ai = await generateStructuredJSON<BriefingResponse>(
-      `Build today's unified financial briefing using this context:
-{
-  "portfolioContext": ${JSON.stringify(portfolioContext, null, 2)},
-  "market": ${JSON.stringify(market, null, 2)},
-  "radarSignals": ${JSON.stringify(
-        signals.map((s) => ({
-          ticker: s.ticker,
-          type: s.type,
-          headline: s.headline,
-          conviction: s.conviction,
-          currentPrice: s.currentPrice,
-          source: s.sources?.[0]?.publisher,
-        })),
-        null,
-        2
-      )}
-}
-
-Return JSON:
-{
-  "headline": string,
-  "summary": string,
-  "marketPulse": "risk_on" | "neutral" | "risk_off",
-  "priorities": string[],
-  "opportunities": string[],
-  "risks": string[],
-  "actionPlan": string[]
-}
-
-Make it feel like one connected platform, not isolated tools.`,
-      SYSTEM
-    );
-
-    return NextResponse.json({
-      ...ai,
-      generatedAt: new Date().toISOString(),
-      sources: {
-        market: "Yahoo Finance",
-        radar: signals.length,
-      },
-    });
-  } catch (error) {
-    console.error("Briefing API failed:", error);
-    return NextResponse.json(
-      {
-        headline: "Your Financial Briefing Is Loading",
-        summary: "We could not generate a full personalized briefing right now. Try again in a moment.",
-        marketPulse: "neutral",
-        priorities: ["Review portfolio risk concentration before new entries."],
-        opportunities: ["Track high-conviction radar signals after price confirmation."],
-        risks: ["Short-term volatility remains elevated across sectors."],
-        actionPlan: ["Open Portfolio X-Ray and revalidate your top 3 holdings."],
-        generatedAt: new Date().toISOString(),
-      },
+    const { portfolioContext } = await req.json();
+    const prompt = buildPrompt(portfolioContext);
+    const briefing = await generateStructuredJSON<any>(prompt, SYSTEM);
+    briefing.generatedAt = new Date().toISOString();
+    return Response.json(briefing);
+  } catch (err) {
+    console.error("Briefing error:", err);
+    return Response.json(
+      { error: "Failed to generate briefing" },
       { status: 500 }
     );
   }

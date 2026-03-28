@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, Barlow, Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import DisclaimerBanner from "@/components/DisclaimerBanner";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="en" className={`${syne.variable} ${dmSans.variable} ${instrumentSerif.variable} ${barlow.variable}`}>
       <body className="bg-black text-white font-sans selection:bg-emerald-900 selection:text-emerald-100">
         <AppShell>{children}</AppShell>
+        <DisclaimerBanner />
       </body>
     </html>
   );

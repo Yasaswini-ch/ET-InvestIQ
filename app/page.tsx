@@ -2,29 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Instrument_Serif, Barlow } from "next/font/google";
 import {
   ArrowUpRight,
-  Play,
   Zap,
   TrendingUp,
   Shield,
   BookOpen,
 } from "lucide-react";
 import BlurText from "@/components/BlurText";
-
-const instrument = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-heading",
-});
-
-const barlow = Barlow({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
-});
 
 const sectionMotion = {
   initial: { opacity: 0, y: 40 },
@@ -47,8 +32,11 @@ const navItems = [
   { label: "Platform", href: "/xray" },
   { label: "Features", href: "/#features" },
   { label: "Radar", href: "/radar" },
+  { label: "My Briefing", href: "/briefing" },
+  { label: "SIP Tools", href: "/sip" },
   { label: "Charts", href: "/charts" },
   { label: "Learn", href: "/newbies" },
+  { label: "Scam Shield", href: "/scamcheck" },
 ] as const;
 
 const tools = [
@@ -107,6 +95,39 @@ const tools = [
     reverse: false,
     visual: <NewbieVisual />,
   },
+  {
+    title: "Scam Shield",
+    heading: "Is that investment tip a scam?",
+    description:
+      "Paste any WhatsApp forward, Telegram tip, or SMS. AI trained on SEBI fraud patterns gives you a scam probability score, red flags, potential violations, and exactly what to do instead.",
+    chips: ["Scam Probability Score", "SEBI Violations", "Volume Anomaly Check", "Red Flag Detection"],
+    button: "Check for Scams",
+    href: "/scamcheck",
+    reverse: true,
+    visual: <ScamShieldVisual />,
+  },
+  {
+    title: "My Briefing",
+    heading: "Your daily edge, delivered in 60 seconds.",
+    description:
+      "A personalized AI briefing every morning — top movers, SEBI alerts, bulk deals, and portfolio-specific signals distilled into a scannable digest. No noise, only what matters to you.",
+    chips: ["Daily Digest", "Portfolio-Aware", "SEBI Alerts", "Top Movers"],
+    button: "Open My Briefing",
+    href: "/briefing",
+    reverse: false,
+    visual: <BriefingVisual />,
+  },
+  {
+    title: "SIP Tools",
+    heading: "Plan your SIPs like a pro.",
+    description:
+      "SIP Time Machine, Goal Calculator, Portfolio Stress Test — a full suite to model returns, stress-test your portfolio against market crashes, and plan goal-based investing with confidence.",
+    chips: ["SIP Time Machine", "Goal Calculator", "Stress Test", "Crash Scenarios"],
+    button: "Open SIP Tools",
+    href: "/sip",
+    reverse: true,
+    visual: <SIPToolsVisual />,
+  },
 ];
 
 const testimonials = [
@@ -132,13 +153,13 @@ const testimonials = [
 
 export default function Home() {
   return (
-    <main className={`bg-black overflow-x-hidden ${instrument.variable} ${barlow.variable}`}>
+    <main className="bg-black overflow-x-hidden">
         <Navbar />
         <Hero />
 
       <motion.section className="py-16 text-center" {...sectionMotion}>
         <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-6">
-          Powered by real data, not hallucination
+          14 Crore+ demat accounts &nbsp;·&nbsp; 8 AI tools &nbsp;·&nbsp; Real BSE/NSE/SEBI data &nbsp;·&nbsp; 100% free
         </span>
         <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6 text-2xl md:text-3xl font-heading italic text-white">
           <span>BSE</span>
@@ -154,7 +175,7 @@ export default function Home() {
       <section id="features" className="py-24 px-6 md:px-16 lg:px-24 bg-black">
         <motion.div className="text-center mb-16" {...sectionMotion}>
           <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-4">
-            All Five Tools
+            All Eight Tools
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.9]">
             Pro intelligence. Zero jargon.
@@ -231,7 +252,7 @@ export default function Home() {
         <motion.div className="relative z-10 liquid-glass rounded-3xl p-12 md:p-16 max-w-4xl mx-auto" {...sectionMotion}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
-              ["5 Tools", "In one platform"],
+              ["8 Tools", "In one platform"],
               ["3 Live Feeds", "BSE · NSE · SEBI"],
               ["Real OHLCV", "Yahoo Finance data"],
               ["Zero Jargon", "Explained in plain English"],
@@ -377,7 +398,7 @@ function Hero() {
           transition={{ delay: 0.8, duration: 0.7, ease: "easeOut" }}
           className="text-white/60 font-body font-light text-lg max-w-xl mx-auto mt-6"
         >
-          Portfolio diagnostics. Opportunity radar. Market intelligence. All powered by AI. Built for the Indian market.
+          Portfolio diagnostics. Daily briefings. SIP planning. Scam detection. All AI-powered for the Indian market.
         </motion.p>
 
         <motion.div
@@ -552,6 +573,104 @@ function NewbieVisual() {
         <p className="text-[10px] uppercase tracking-wide text-white/50 font-body mb-1">Back</p>
         <p className="text-sm text-white/75 font-body">XIRR is annualized return accounting for irregular cash flows over time.</p>
         <span className="mt-2 inline-flex rounded-full bg-emerald-500/20 text-emerald-300 px-2.5 py-1 text-[10px] font-body">Action: Compare fund XIRRs</span>
+      </div>
+    </div>
+  );
+}
+
+function BriefingVisual() {
+  return (
+    <div className="liquid-glass rounded-2xl p-6 space-y-3">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-white font-body text-sm">Today's Briefing</p>
+        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-emerald-400 font-body">Live</span>
+      </div>
+      {[
+        { type: "Top Mover", ticker: "TATASTEEL", detail: "+4.2% on bulk deal signal", color: "text-emerald-400" },
+        { type: "SEBI Alert", ticker: "Circular", detail: "New MF expense ratio cap effective Q1", color: "text-yellow-400" },
+        { type: "Portfolio", ticker: "HDFCMF", detail: "Expense drag up 0.08% — review", color: "text-red-400" },
+      ].map((item) => (
+        <div key={item.ticker} className="liquid-glass rounded-xl px-3 py-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wide text-white/45 font-body">{item.type}</span>
+            <span className={`text-xs font-body font-medium ${item.color}`}>{item.ticker}</span>
+          </div>
+          <p className="text-white/70 text-[11px] font-body mt-0.5">{item.detail}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SIPToolsVisual() {
+  return (
+    <div className="liquid-glass rounded-2xl p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-white font-body text-sm">SIP Time Machine</p>
+        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">10Y simulation</span>
+      </div>
+      <div className="h-24 flex items-end gap-1">
+        {[22, 28, 24, 35, 30, 44, 38, 52, 46, 60, 55, 72].map((h, i) => (
+          <div key={i} className="flex-1 rounded-sm bg-emerald-400/70" style={{ height: `${h}%` }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[["₹12L", "Invested"], ["₹21.4L", "Final Value"], ["78%", "Total Return"]].map(([val, label]) => (
+          <div key={label} className="liquid-glass rounded-xl py-2">
+            <p className="text-white font-heading italic text-base">{val}</p>
+            <p className="text-white/50 text-[10px] font-body mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScamShieldVisual() {
+  return (
+    <div className="liquid-glass rounded-2xl p-6 space-y-3">
+      {/* Score row */}
+      <div className="flex items-center gap-4">
+        <div className="relative w-20 h-20 shrink-0">
+          <svg viewBox="0 0 200 200" className="w-full h-full">
+            <circle cx={100} cy={100} r={80} fill="none" stroke="#ffffff10" strokeWidth={16} />
+            <circle
+              cx={100} cy={100} r={80}
+              fill="none" stroke="#ef4444" strokeWidth={16}
+              strokeLinecap="round"
+              strokeDasharray="502.65"
+              strokeDashoffset="85"
+              transform="rotate(-90 100 100)"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xl font-heading italic text-white leading-none">83</span>
+            <span className="text-white/40 text-[9px] font-body">/100</span>
+          </div>
+        </div>
+        <div>
+          <span className="bg-red-500/20 text-red-400 border border-red-500/30 rounded-full px-3 py-1 text-xs font-body font-medium">
+            LIKELY SCAM
+          </span>
+          <p className="text-white/50 text-[11px] font-body mt-1.5 leading-relaxed">
+            Promises guaranteed 10x returns with no SEBI registration.
+          </p>
+        </div>
+      </div>
+      {/* Red flags */}
+      <div className="space-y-2">
+        {[
+          ["Guaranteed Returns", "HIGH"],
+          ["Urgency Tactics", "HIGH"],
+          ["Unregistered Advisor", "MEDIUM"],
+        ].map(([flag, severity]) => (
+          <div key={flag} className="liquid-glass rounded-xl px-3 py-2 flex items-center justify-between">
+            <span className="text-white/70 text-[11px] font-body">{flag}</span>
+            <span className={`text-[10px] rounded-full px-2 py-0.5 font-body ${severity === "HIGH" ? "bg-red-500/20 text-red-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+              {severity}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

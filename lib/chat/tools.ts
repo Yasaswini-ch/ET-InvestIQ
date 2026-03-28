@@ -18,7 +18,7 @@ export function extractTickerFromText(input: string): string | null {
     "CAN", "COULD", "SHOULD", "WOULD", "MAY", "MIGHT", "MUST", "OUGHT"
   ]);
 
-  for (const match of matches) {
+  for (const match of Array.from(matches)) {
     const token = match[1];
     if (!commonWords.has(token) && token.length >= 2) {
       // Return the first non-common word as a .NS ticker

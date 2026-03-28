@@ -2,14 +2,25 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Shield } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon?: LucideIcon;
+  accent?: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { label: "X-Ray", href: "/xray" },
   { label: "Radar", href: "/radar" },
+  { label: "My Briefing", href: "/briefing", accent: "text-emerald-400 glow" },
   { label: "Chat", href: "/chat" },
   { label: "Charts", href: "/charts" },
+  { label: "SIP Tools", href: "/sip" },
   { label: "Learn", href: "/newbies" },
+  { label: "Scam Shield", href: "/scamcheck", icon: Shield, accent: "text-red-400" },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -29,16 +40,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className="hidden md:flex items-center gap-1 liquid-glass rounded-full px-2 py-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                       isActive
                         ? "bg-white/15 text-white"
+                        : item.accent
+                        ? `${item.accent} hover:text-white`
                         : "text-white/70 hover:text-white"
                     }`}
                   >
+                    {Icon && <Icon className="w-3.5 h-3.5" />}
                     {item.label}
                   </Link>
                 );

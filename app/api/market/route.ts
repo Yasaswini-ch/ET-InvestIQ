@@ -1,3 +1,4 @@
+import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextResponse } from "next/server";
 import { getIndianMarketData } from "@/lib/yfinance";
 

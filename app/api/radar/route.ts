@@ -1,3 +1,4 @@
+import { rateLimit, getIP } from "@/lib/rateLimit";
 import { fetchBseAnnouncements } from "@/lib/feeds/bse";
 import { fetchNseBulkDeals } from "@/lib/feeds/nse";
 import { fetchSebiFeed } from "@/lib/feeds/sebi";
