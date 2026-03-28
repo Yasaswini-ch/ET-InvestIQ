@@ -8,7 +8,7 @@ import { extractTickerFromText, pickRelevantSignals } from "@/lib/chat/tools";
 import { fetchBseAnnouncements } from "@/lib/feeds/bse";
 import { fetchNseBulkDeals } from "@/lib/feeds/nse";
 import { fetchSebiFeed } from "@/lib/feeds/sebi";
-import { generateStructuredJSON } from "@/lib/gemini";
+import { generateChatJSON } from "@/lib/chat/llm";
 import { enrichSignalsWithQuotes } from "@/lib/radar/enrich";
 import { normalizeEventsToSignals } from "@/lib/radar/normalize";
 import { rankSignals } from "@/lib/radar/scoring";
@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
 
     let ai: { answer: string; suggested: string[] } | null = null;
     try {
-      ai = await generateStructuredJSON<{ answer: string; suggested: string[] }>(
+      ai = await generateChatJSON(
         `User conversation:
 ${JSON.stringify(messages, null, 2)}
 
