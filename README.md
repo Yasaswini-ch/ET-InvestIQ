@@ -1,4 +1,4 @@
-# The investment intelligence layer 14 crore Indian investors do not have yet
+# The investment intelligence layer that 14 crore Indian investors do not have yet
 
 ## ET InvestIQ
 
