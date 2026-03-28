@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep \"\\\\.tsx$\")",
-      "Bash(grep -r pdf-parse /c/Opensource/etgenai --include=*.json)"
-    ]
-  }
-}
