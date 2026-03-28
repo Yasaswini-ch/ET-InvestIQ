@@ -3,7 +3,7 @@ import { generateStructuredJSON } from '@/lib/gemini';
 import { fetchPromoterSignals } from '@/lib/intelligence/promoterScraper';
 import { buildPromoterFallback } from '@/lib/intelligence/fallbacks';
 
-export const revalidate = 3600; // Cache for 1 hour
+export const dynamic = "force-dynamic";
 
 const AI_TIMEOUT_MS = 12000;
 

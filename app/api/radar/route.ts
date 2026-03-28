@@ -8,6 +8,8 @@ import { normalizeEventsToSignals } from "@/lib/radar/normalize";
 import { rankSignals } from "@/lib/radar/scoring";
 import { RadarResponse, RadarSignal } from "@/lib/types/radar";
 
+export const dynamic = "force-dynamic";
+
 const SYSTEM = `You are a top Indian equity research analyst.
 You receive preliminary signals from real exchange/regulatory events.
 Refine reasoning, catalysts, risks, and sentiment.

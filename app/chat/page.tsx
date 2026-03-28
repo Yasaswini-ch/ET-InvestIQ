@@ -15,6 +15,7 @@ interface Message {
 const PORTFOLIO_CONTEXT_KEY = "et_portfolio_context";
 
 export default function ChatPage() {
+  const modelLabel = process.env.NEXT_PUBLIC_CHAT_MODEL_LABEL || "AI Model";
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -132,7 +133,7 @@ export default function ChatPage() {
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
             <Sparkles className="w-3 h-3" />
-            Gemini Flash
+            {modelLabel}
           </div>
         </div>
 
