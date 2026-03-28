@@ -38,6 +38,38 @@ const INJECTION_PATTERNS = [
   /act as if/i,
 ];
 
+function unwrapAnswerFromJsonBlock(text: string): string {
+  const raw = text.trim();
+  if (!raw) return raw;
+
+  const deFenced = raw.replace(/```json\n?|\n?```/g, "").trim();
+
+  const tryParse = (candidate: string): string | null => {
+    try {
+      const parsed = JSON.parse(candidate) as { answer?: unknown };
+      if (typeof parsed.answer === "string" && parsed.answer.trim()) {
+        return parsed.answer.trim();
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const direct = tryParse(deFenced);
+  if (direct) return direct;
+
+  const firstBrace = deFenced.indexOf("{");
+  const lastBrace = deFenced.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const fragment = deFenced.slice(firstBrace, lastBrace + 1);
+    const fromFragment = tryParse(fragment);
+    if (fromFragment) return fromFragment;
+  }
+
+  return deFenced;
+}
+
 function formatMove(changePercent?: number | null) {
   if (typeof changePercent !== "number" || !Number.isFinite(changePercent)) return null;
   const direction = changePercent > 0 ? "up" : changePercent < 0 ? "down" : "flat";
@@ -271,7 +303,7 @@ ${JSON.stringify(
     }
 
     const fallback = buildFallbackChatAnswer(latestUser, { ticker, market, signals });
-    const answer = ai?.answer?.trim() ? ai.answer : fallback.answer;
+    const answer = ai?.answer?.trim() ? unwrapAnswerFromJsonBlock(ai.answer) : fallback.answer;
     const suggested = Array.isArray(ai?.suggested) && ai?.suggested.length > 0 ? ai.suggested : fallback.suggested;
 
     const payload: ChatResponsePayload = {
