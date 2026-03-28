@@ -232,13 +232,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input." }, { status: 400 });
     }
     const latestUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-    const ticker = body.focusTicker || extractTickerFromText(latestUser);
+    const extractedTicker = body.focusTicker || extractTickerFromText(latestUser);
 
     const [market, signals, tickerQuote] = await Promise.all([
       safeMarketData(),
       loadSignals(),
-      ticker ? getStockQuote(ticker).catch(() => null) : Promise.resolve(null),
+      extractedTicker ? getStockQuote(extractedTicker).catch(() => null) : Promise.resolve(null),
     ]);
+    const ticker = tickerQuote ? extractedTicker : null;
 
     const relevant = pickRelevantSignals(signals, latestUser);
     const context = buildMarketContext({
