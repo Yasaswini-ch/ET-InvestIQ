@@ -14,8 +14,6 @@ export function extractTickerFromText(input: string): string | null {
     ["INFOSYS", "INFY.NS"],
     ["HDFCBANK", "HDFCBANK.NS"],
     ["SBIN", "SBIN.NS"],
-    ["BANKNIFTY", "BANKNIFTY.NS"],
-    ["NIFTY", "NIFTY.NS"],
   ]);
 
   for (const word of originalWords) {
