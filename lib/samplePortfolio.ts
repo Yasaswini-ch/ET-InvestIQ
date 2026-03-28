@@ -1,5 +1,7 @@
+import { DEMO_INVESTOR } from "@/lib/investor";
+
 export const samplePortfolio = {
-  investorName: "Rahul Sharma",
+  investorName: DEMO_INVESTOR.name,
   panMasked: "ABCPS****K",
   statementDate: "March 2026",
   totalInvested: 850000,

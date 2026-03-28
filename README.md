@@ -1,271 +1,228 @@
 # ET InvestIQ
 
-**AI-powered investment intelligence for Indian retail investors.**
+14 crore Indian demat accounts. Zero tools that connect what's happening in the market to what's happening in their portfolio. ET InvestIQ fixes that.
 
-Built with Next.js 14, TypeScript, Tailwind CSS, and Google Gemini. Five tools in one platform — portfolio diagnostics, opportunity signals, market chat, chart pattern analysis, and beginner education. No account needed to demo.
+ET InvestIQ is an AI-powered investment intelligence platform for Indian retail investors. It combines portfolio diagnostics, live market context, signal detection, behavioral coaching, scam screening, and daily briefings into one product experience.
 
----
+Built with Next.js 14, TypeScript, Tailwind CSS, Framer Motion, and Google Gemini.
 
-## Live at a Glance
+## Overview
 
-| Route | Tool | Description |
+The platform is designed to help investors move from fragmented information to actionable decisions. It blends live market data, portfolio context, and AI-generated analysis across multiple workflows:
+
+- Portfolio review and rebalancing
+- Live opportunity tracking
+- Market Q&A with portfolio-aware context
+- Chart pattern analysis
+- Scam detection for suspicious messages
+- SIP and behavioral investing support
+- Daily executive briefings
+- A persistent AI assistant drawer available from every page
+
+## Key Routes
+
+| Route | Product Area | Description |
 |---|---|---|
-| `/` | Landing Page | Dark glass-morphism homepage with feature overview |
-| `/xray` | Portfolio X-Ray | Upload CAS PDF → AI health score, XIRR, overlap, rebalancing |
-| `/radar` | Opportunity Radar | BSE + NSE + SEBI feeds → AI-ranked signals with conviction |
-| `/chat` | Market Intelligence | Live market context + portfolio awareness + cited AI answers |
-| `/charts` | Chart Intelligence | Real OHLCV from Yahoo Finance + AI pattern detection |
-| `/scamcheck` | ScamShield | Detect fraudulent investment messages + volume anomalies |
-| `/sip` | SIP Tools | SIP Time Machine + AI Goal-Based Planning |
-| `/briefing` | My Briefing | AI-generated daily summary of your portfolio vs. market |
-| `/newbies` | Newbie Corner | Flip-card learning + daily market challenge with streaks |
-| `/help` | Help | Quick links to key features |
+| `/` | Landing page | Product overview and feature navigation |
+| `/xray` | Portfolio X-Ray | Upload a CAS statement for portfolio health, overlap, and rebalancing analysis |
+| `/radar` | Opportunity Radar | Live BSE, NSE, and SEBI signal tracking with AI enrichment |
+| Floating tab | Persistent AI Assistant | Always-available market and portfolio assistant accessible from every page |
+| `/charts` | Chart Intelligence | OHLCV analysis and AI pattern detection for NSE tickers |
+| `/scamcheck` | Scam Shield | Scam screening for suspicious investment messages |
+| `/sip` | SIP Tools | SIP Time Machine, Goal Calculator, Portfolio Stress Test, and crash history guidance |
+| `/briefing` | My Briefing | Daily briefing that connects your portfolio and market context |
+| `/newbies` | Newbie Corner | Five-module learning platform with flip cards, progress tracking, and daily challenges |
 
----
+## Core Capabilities
 
-## The Core Tools
+### Portfolio X-Ray
 
-### 1. Portfolio X-Ray — `/xray`
+Upload a CAS PDF from CAMS or KFintech and get a structured portfolio analysis.
 
-Upload your CAS PDF (CAMS or KFintech) or use the pre-loaded sample portfolio.
+Includes:
+- Portfolio health score
+- Fund-level XIRR
+- Expense drag
+- Overlap heatmap
+- Rebalancing recommendations
+- Fund-level action table
 
-**What you get:**
-- **Health Score** (0–100) — weighted composite of XIRR, overlap, expense ratio, and risk
-- **XIRR per fund** — actual annualized return on your irregular cash flows
-- **Expense drag** — how much you are bleeding in annual fees
-- **Overlap heatmap** — which funds hold the same stocks (red = dangerous overlap)
-- **AI rebalancing plan** — typed-out action steps with urgency level and expected savings
-- **Fund details table** — per-fund metrics with hold/increase/reduce/exit recommendations
+### Opportunity Radar
 
-All analysis runs through Google Gemini with your extracted portfolio as context.
+Tracks live market signals from Indian market sources and enriches them with AI reasoning.
 
----
+Capabilities:
+- BSE announcements
+- NSE bulk deal support
+- SEBI RSS ingestion
+- AI ranking and conviction scoring
+- Signal detail expansion and watchlist support
 
-### 2. Opportunity Radar — `/radar`
+### Persistent AI Assistant
 
-Pulls live signals from three Indian market sources and enriches them with AI reasoning.
+A portfolio-aware assistant that blends live market context with your own holdings and is accessible from every page through a floating tab and slide-out drawer.
 
-**Data sources:**
-- **BSE** — corporate announcements page (HTML scrape)
-- **NSE** — bulk deal archives (JSON API with CSV fallback)
-- **SEBI** — official RSS feed (`sebirss.xml`)
+It can incorporate:
+- Nifty and Sensex context
+- USD-INR and gold snapshots
+- Radar signals
+- Portfolio context from X-Ray
 
-**Pipeline:**
-1. Fetch all three in parallel via `Promise.allSettled`
-2. Normalize raw events into typed radar signals
-3. Enrich each signal with live Yahoo Finance quote data (price, target, stop-loss)
-4. Rank by conviction score
-5. Pass top 8 to Gemini for reasoning, catalysts, risks, and market sentiment summary
+The full `/chat` route still exists for deeper sessions, but quick questions are handled from the drawer.
 
-**Fallback:** When live feeds are unavailable (network block/throttle), the API returns five curated signals with realistic data so the page never crashes.
+### Chart Intelligence
 
-**UI features:** Search, filter by conviction/type, watchlist (localStorage), per-signal expandable detail.
+Analyze an NSE ticker with OHLCV data and AI-guided technical interpretation.
 
----
+Features:
+- Ticker normalization
+- Historical price and volume analysis
+- Support and resistance summary
+- Trend detection
+- Pattern interpretation
 
-### 3. Market Intelligence Chat — `/chat`
+### Scam Shield
 
-A context-aware AI assistant for Indian markets.
+Scam Shield screens investment messages for fraud patterns, urgency language, guaranteed-return claims, subscription traps, and pump-and-dump indicators.
 
-**Before answering, the server:**
-1. Fetches live Nifty/Sensex/USD-INR/Gold from Yahoo Finance
-2. Loads and ranks live radar signals (with graceful fallback if feeds are down)
-3. Pulls portfolio context from `/xray` if the user ran an analysis (stored in localStorage)
-4. Feeds all of this as a structured context block to Gemini
+Features:
+- Message analysis for suspicious language
+- Ticker mention extraction
+- Volume anomaly checks for cited securities
+- Fallback analysis when AI output is unavailable
 
-**Response includes:**
-- Answer (under 260 words, with risk mention)
-- Two follow-up question suggestions
-- Source citations (market feed, radar signals, portfolio if applicable)
+### SIP Tools
 
-All feed failures are handled gracefully — chat always responds.
+Designed for disciplined long-term investing and SIP planning.
 
----
+Includes:
+- SIP Time Machine
+- Goal Calculator
+- Portfolio Stress Test
 
-### 4. Chart Pattern Intelligence — `/charts`
+The Goal Calculator uses preset goals, risk appetite, and timeline planning. The Stress Test uses user-defined allocation sliders and a crash-history companion section.
 
-Enter any NSE ticker and get a full technical analysis with AI interpretation.
+### My Briefing
 
-**Flow:**
-1. Normalize ticker (e.g. `HDFC BANK` → `HDFCBANK.NS`, `SBI` → `SBIN.NS`)
-2. Fetch historical OHLCV candles from Yahoo Finance v8 API
-3. Compute technical summary locally: support/resistance zones, trend, volume spike, pattern window
-4. Pass summary to Gemini which returns 1–3 pattern insights with bias, confidence %, and estimated success rate
-5. Render interactive candlestick + volume chart using **Lightweight Charts** (dark theme)
+Generates a concise daily investor briefing that summarizes:
+- Portfolio-relevant issues
+- Market conditions
+- Immediate actions
+- Top opportunity
 
-**Chart features:**
-- Candlestick series (green/red) + volume histogram overlay
-- Support lines (green dashed) and resistance lines (red dashed)
-- Breakout marker (arrow up) if detected
-- Pattern zone highlight overlay
+If the AI model is unavailable, the API returns a deterministic fallback briefing rather than failing the page.
 
-**Range options:** 1mo, 3mo, 6mo, 1y
+### Intelligence Center
 
----
+The Intelligence Center combines three analytical layers:
 
-### 5. Newbie Corner — `/newbies`
+1. Budget impact analysis
+2. Promoter and smart-money signals
+3. Behavioral SIP resilience analysis
 
-Interactive financial education built for first-time investors.
+Recent updates include:
+- Multi-select budget interaction support with per-item impact cards
+- Shared fallback responses for each layer
+- Safer API handling when AI output is unavailable
+- Shared dashboard navigation in the page header area
+- Top-level and child-level error boundaries so the route degrades gracefully
 
-**Learning cards (flip to reveal):**
-- Market Basics — what moves stock prices
-- Risk 101 — position sizing and concentration
-- Entry/Exit — avoiding emotional decisions
-- Common Mistakes — the errors that destroy beginners
+### Newbie Corner
 
-Each card shows a question on the front, an explanation on the back, and one immediate action to take today.
+The learning platform now includes five modules:
 
-**Daily Challenge:**
-- One market scenario question per day, adapted to live Nifty movement
-- Correct answer builds your streak (tracked in localStorage)
-- Progress tracker: concepts learned / 20 goal
+- Market Basics
+- Risk & Sizing
+- Entry & Exit
+- Common Mistakes
+- Behavioral Finance
 
----
+It also includes flip cards, progress tracking, a streak counter, and a rotating daily challenge.
 
-## New Intelligence Features
+## User Experience Notes
 
-### 6. ScamShield — `/scamcheck`
+The app uses a unified dark glass-morphism design system with:
 
-A specialized AI tool to detect fraudulent investment schemes and "pump and dump" messages common in social media and messaging groups.
+- Black background base
+- Liquid glass cards and panels
+- Emerald as the primary action accent
+- Clear semantic colors for warning, risk, and information states
+- Shared page header with a persistent back-to-dashboard action
 
-**Capabilities:**
-- **Message Analysis:** Paste a suspicious message to detect red flags like "guaranteed returns," "secret group," or "urgent action."
-- **Volume Anomaly Check:** Automatically checks if a mentioned ticker is experiencing suspicious volume spikes (potential pump and dump).
-- **Scam Verdict:** AI provides a verdict (LIKELY SCAM, SUSPICIOUS, PROBABLY SAFE) with specific reasoning and red flag detection.
-
-### 7. SIP Tools & Time Machine — `/sip`
-
-Advanced planning tools for systematic investors.
-
-**Features:**
-- **SIP Time Machine:** "Rewind the market" to see exactly how much your SIP would be worth today if you had started years ago in a specific fund. Uses actual historical NAV data.
-- **Goal-Based Planning:** AI-assisted calculator that helps you determine exactly how much you need to save per month to reach goals like buying a home, children's education, or retirement, adjusted for inflation.
-
-### 8. My Briefing — `/briefing`
-
-A personalized AI-generated executive summary for your investments.
-
-**How it works:**
-- Cross-references your current **Portfolio X-Ray** results with the latest **Opportunity Radar** signals and **Market Mood**.
-- Generates a "Headline of the Day" specifically for your financial situation.
-- Provides prioritized alerts (High/Medium/Low) with clear action steps and links to relevant platform features.
-
----
-
-## UI Design
-
-All pages use a unified dark glass-morphism design system:
-
-- **Background:** pure black (`#000000`)
-- **Cards:** `liquid-glass` — backdrop blur + subtle gradient border
-- **Primary font:** Instrument Serif (italic headings)
-- **Body font:** Barlow (light/regular/medium)
-- **Accent:** Emerald green for signals, status, success states
-- **Semantic colors:** Red (danger), Yellow (warning), Blue (info) — all in dark variants (`bg-*/10`)
-- **Navbar:** Fixed top — ET InvestIQ logo + nav pills + Launch App CTA
-
-The home page is a standalone marketing landing page with animated hero, feature walkthroughs, stats, and testimonials. Feature pages share the AppShell navbar.
-
----
-
-## Tech Stack
+## Technology Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router, server components + client islands) |
+| Framework | Next.js 14 App Router |
 | Language | TypeScript |
-| Styling | Tailwind CSS + custom `liquid-glass` utilities |
+| Styling | Tailwind CSS |
 | Animation | Framer Motion |
-| AI | Google Gemini via `@google/genai` — model: `gemini-2.5-flash-lite` |
-| Charts | Lightweight Charts (OHLCV), Recharts (pie + bar) |
-| Market Data | Yahoo Finance v8 API (OHLCV, quotes, indices) |
-| PDF Parsing | `pdf-parse` |
-| Feed Parsing | `fast-xml-parser` (SEBI RSS), `papaparse` (NSE CSV) |
-| Fonts | Instrument Serif, Barlow, Syne, DM Sans (via `next/font/google`) |
-
----
+| AI | Google Gemini via `@google/genai` |
+| Charts | Lightweight Charts, Recharts |
+| Market Data | Yahoo Finance and exchange feeds |
+| Parsing | `pdf-parse`, `fast-xml-parser`, `papaparse` |
 
 ## Project Structure
 
-```
+```text
 app/
-  page.tsx                 # Landing page (dark, standalone)
-  layout.tsx               # Root layout — fonts + AppShell
-  globals.css              # Tailwind + liquid-glass utilities + animations
+  page.tsx                 # Landing page
+  layout.tsx               # Root layout and global shell
+  globals.css              # Global styles and design system
   api/
-    xray/route.ts          # POST — parse CAS PDF + Gemini analysis
-    radar/route.ts         # GET — BSE/NSE/SEBI feeds → AI signals
-    chat/route.ts          # POST — market context + Gemini chat
-    charts/route.ts        # GET — OHLCV + AI pattern detection
-    market/route.ts        # GET — Nifty/Sensex snapshot
-  xray/page.tsx
-  radar/page.tsx
+    briefing/route.ts      # Daily briefing API
+    chat/route.ts          # Market intelligence chat API
+    charts/route.ts        # Chart pattern analysis API
+    intelligence/          # Budget, promoters, and stay-course APIs
+    market/route.ts        # Market snapshot API
+    scamcheck/route.ts     # Scam Shield analysis API
+    xray/route.ts          # Portfolio X-Ray analysis API
+  briefing/page.tsx
   chat/page.tsx
   charts/page.tsx
+  intelligence/page.tsx
   newbies/page.tsx
-  help/page.tsx
+  radar/page.tsx
+  scamcheck/page.tsx
+  sip/page.tsx
+  xray/page.tsx
 
 components/
-  AppShell.tsx             # Fixed dark navbar + content wrapper
-  PageHeader.tsx           # Page title + action slot
-  MetricCard.tsx           # Animated counter card
-  HealthScoreRing.tsx      # SVG ring with score animation
-  SignalCard.tsx           # Radar signal with expand/watchlist
-  RebalancingPlan.tsx      # Typewriter plan with urgency badge
-  FundDetailsTable.tsx     # Per-fund metrics table
-  OverlapHeatmap.tsx       # Animated fund overlap matrix
-  AllocationPieChart.tsx   # Recharts pie (allocation by category)
-  FundXIRRBarChart.tsx     # Recharts horizontal bar (per-fund XIRR)
+  AppShell.tsx
+  PageHeader.tsx
+  Intelligence/
+  ScamShield/
   charts/
-    OhlcvChart.tsx         # Lightweight Charts candlestick + volume
-    TickerSearch.tsx       # NSE ticker input + analyze button
-    PatternSummaryCard.tsx # AI pattern name + confidence + risk
-    PatternStatsCard.tsx   # Close/change/support/resistance grid
 
 lib/
-  gemini.ts                # Gemini client + generateStructuredJSON
-  yfinance.ts              # Yahoo Finance OHLCV + quote fetch
-  chart-analysis.ts        # Local OHLCV summary (support/resistance/trend)
-  samplePortfolio.ts       # Pre-loaded demo portfolio data
-  feeds/
-    bse.ts                 # BSE announcements HTML scraper
-    nse.ts                 # NSE bulk deals JSON/CSV fetcher
-    sebi.ts                # SEBI RSS XML parser
-  radar/
-    normalize.ts           # Events → typed RadarSignal
-    enrich.ts              # Add live quote prices to signals
-    scoring.ts             # Rank signals by conviction score
+  briefing/
   chat/
-    context.ts             # Build structured market context block
-    sources.ts             # Build citation source list
-    tools.ts               # Extract ticker, pick relevant signals
+  intelligence/
+  scamcheck/
+  feeds/
+  radar/
   types/
-    market.ts
-    radar.ts
-    chat.ts
+  gemini.ts
+  rateLimit.ts
+  yfinance.ts
 ```
-
----
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- A Google Gemini API key (free tier works — [get one here](https://aistudio.google.com/app/apikey))
+- Node.js 18 or newer
+- A Google Gemini API key
 
 ### Installation
 
 ```bash
-# Clone the repo
 git clone https://github.com/your-username/etgenai.git
 cd etgenai
-
-# Install dependencies
 npm install
 ```
 
-### Environment
+### Environment Variables
 
 Create a `.env.local` file in the project root:
 
@@ -273,133 +230,107 @@ Create a `.env.local` file in the project root:
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### Run
+### Run Locally
 
 ```bash
-# Development
 npm run dev
+```
 
-# Production build
+Open `http://localhost:3000`.
+
+### Production Build
+
+```bash
 npm run build
 npm start
 ```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
 
 ## API Reference
 
 ### `POST /api/xray`
 
-Analyzes a CAS PDF portfolio statement.
+Analyzes a CAS PDF or sample portfolio.
 
-**Body:** `multipart/form-data`
-- `pdf` — CAS PDF file
-- `useSample=true` — use the built-in sample portfolio (no file needed)
-
-**Response:** Full portfolio analysis object with health score, funds array, insights, overlap matrix, and rebalancing plan.
-
----
+Body:
+- `pdf` as `multipart/form-data`
+- `useSample=true` for the sample portfolio flow
 
 ### `GET /api/radar`
 
-Returns live market signals enriched with AI reasoning.
-
-**Response:**
-```json
-{
-  "generatedAt": "ISO timestamp",
-  "marketSentiment": "bullish | neutral | bearish",
-  "sentimentReason": "string",
-  "niftyOutlook": "string",
-  "topSector": "string",
-  "sourceStatus": { "bse": "ok | partial | failed", "nse": "...", "sebi": "..." },
-  "signals": [ /* RadarSignal[] */ ]
-}
-```
-
-Falls back to curated signals if all live feeds are unavailable.
-
----
+Returns live market signals with AI enrichment and fallback signals if external feeds are unavailable.
 
 ### `POST /api/chat`
 
-Returns an AI answer with live market context.
-
-**Body:**
-```json
-{
-  "messages": [{ "role": "user | assistant", "content": "string" }],
-  "portfolioContext": { /* optional — from /xray session */ },
-  "focusTicker": "RELIANCE (optional)"
-}
-```
-
-**Response:**
-```json
-{
-  "answer": "string",
-  "suggested": ["follow-up 1", "follow-up 2"],
-  "sources": [ /* ChatSource[] */ ]
-}
-```
-
----
+Returns a portfolio-aware market answer with sources.
 
 ### `GET /api/charts?ticker=RELIANCE&range=6mo&interval=1d`
 
-Fetches OHLCV data and runs AI pattern detection.
-
-**Params:** `ticker`, `range` (1mo/3mo/6mo/1y), `interval` (1d/1wk)
-
-**Response:** Candles array + summary (support/resistance/trend) + AI patterns + similar historical references.
-
----
+Returns OHLCV data and chart pattern analysis for an NSE ticker.
 
 ### `GET /api/market`
 
-Returns a live Nifty/Sensex/USD-INR/Gold snapshot from Yahoo Finance.
+Returns live market snapshot data.
 
----
+### `POST /api/briefing`
 
-## Resilience Notes
+Generates a personalized daily investor briefing. If the AI response is unavailable, a fallback briefing is returned.
 
-- **Radar:** BSE, NSE, and SEBI feeds can be intermittently throttled. The API uses `Promise.allSettled` so partial failures are handled. If all three fail, curated fallback signals are served — the UI never crashes.
-- **Chat:** All external data (market, feeds, stock quotes) are wrapped in try/catch. If live context fails, Gemini still answers using its training knowledge, and the response is returned normally.
-- **Charts:** Yahoo Finance v8 API is generally stable. Requires at least 30 candles for analysis — tickers with insufficient history return a 422 with a clear message.
-- **X-Ray:** PDF parsing can fail on non-standard CAS formats. Use the sample portfolio button to verify the analysis pipeline independently.
+### `POST /api/scamcheck`
 
----
+Analyzes a suspicious investment message, identifies red flags, and checks for ticker-related volume anomalies.
+
+### `POST /api/intelligence/budget`
+
+Analyzes selected budget announcements against portfolio context.
+
+### `GET /api/intelligence/promoters`
+
+Returns promoter and smart-money analysis.
+
+### `POST /api/intelligence/staycourse`
+
+Returns SIP resilience analysis and behavioral coaching.
+
+## Resilience and Fallback Behavior
+
+Several product areas now degrade gracefully when AI output or external data is unstable:
+
+- Budget analysis returns a deterministic fallback response if Gemini fails
+- Promoter intelligence returns fallback market interpretation if the AI layer times out
+- Stay-course analysis returns a fallback behavioral result if the AI layer fails
+- My Briefing returns a fallback executive summary if AI generation fails
+- Scam Shield returns a rule-based analysis if the AI output is unavailable
+
+This keeps the UI functional instead of failing with a generic error.
+
+## Development Notes
+
+- Internal feature pages now surface a persistent `Back to Dashboard` action in the page header area.
+- The Intelligence Center supports multi-select budget analysis and per-item impact summaries.
+- The app uses client-side storage for portfolio context and selected user progress in a few tools.
+- A first-visit name capture modal stores an investor name locally for personalisation.
+
+## Security And Resilience
+
+The app includes several hardening and fallback measures:
+
+- Prompt injection filtering is enabled on the chat API.
+- PDF uploads are checked for active JavaScript content before analysis.
+- Chart analysis falls back to deterministic technical patterns if Gemini is unavailable.
+- Budget, promoter, stay-course, briefing, scam screening, and SIP optimizer flows all return useful fallback responses instead of crashing.
+- The intelligence route has local error boundaries and loading states to avoid the refresh loop caused by runtime errors.
+- Chart, briefing, and scam flows surface readable error messages instead of blank screens.
 
 ## Known Limitations
 
-- NSE/BSE requests are made server-side — they may be blocked by exchange firewalls in some cloud hosting environments. Self-hosted or local dev works best.
-- Chart pattern success rates are AI-estimated probabilities, not backtested guarantees.
-- This platform is **not SEBI registered** and does not constitute financial advice.
+- Exchange feeds can be rate-limited or intermittently unavailable.
+- AI outputs are probabilistic and should be treated as decision support, not financial advice.
+- This platform is not SEBI registered.
 
----
+## Disclaimer
 
-## Roadmap
+ET InvestIQ is for informational and educational use only. It does not constitute financial advice, and it is not a substitute for professional guidance. Always verify important decisions independently.
 
-- Feed-level Redis caching + retry backoff for BSE/NSE/SEBI
-- User accounts + persistent watchlists + email/Telegram alerts
-- Portfolio drift alerts and monthly AI review summaries
-- WhatsApp bot integration for radar signals
-- NSE option chain overlay on charts
+## License
 
----
-
-## Demo Flow (Hackathon / Presentation)
-
-Start here for maximum impact:
-
-1. **`/xray`** — Load sample portfolio. Walk through health score → overlap heatmap → AI rebalancing plan.
-2. **`/radar`** — Show live signals, filter by HIGH conviction, expand one signal for full reasoning.
-3. **`/chat`** — Ask "Should I hold HDFC Bank?" — show how portfolio context flows into the answer.
-4. **`/charts`** — Search RELIANCE, select 6mo, click Analyze — show candlestick + AI patterns.
-5. **`/newbies`** — Answer the daily challenge, flip a card — show the education layer.
-
----
-
-*© 2026 ET InvestIQ — For informational and educational use only. Not SEBI registered.*
+No license file is currently included in the repository.

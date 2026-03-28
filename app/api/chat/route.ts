@@ -27,6 +27,15 @@ Rules:
   "suggested": string[]
 }`;
 
+const INJECTION_PATTERNS = [
+  /ignore (all |previous |above )?instructions/i,
+  /system prompt/i,
+  /jailbreak/i,
+  /you are now/i,
+  /pretend you/i,
+  /act as if/i,
+];
+
 async function loadSignals() {
   try {
     const [bseRes, nseRes, sebiRes] = await Promise.allSettled([
@@ -71,12 +80,18 @@ export async function POST(req: NextRequest) {
     const MAX_MSG_LENGTH = 600;
     const MAX_MESSAGES = 10;
     const rawMessages = body.messages || [];
-    const messages = rawMessages
-      .slice(-MAX_MESSAGES)
-      .map((m: any) => ({
-        role: m.role,
-        content: String(m.content).slice(0, MAX_MSG_LENGTH),
-      }));
+    const messages = rawMessages.slice(-MAX_MESSAGES).map((message) => ({
+      role: message.role,
+      content: String(message.content).slice(0, MAX_MSG_LENGTH),
+    }));
+
+    if (
+      messages.some((message) =>
+        INJECTION_PATTERNS.some((pattern) => pattern.test(message.content))
+      )
+    ) {
+      return NextResponse.json({ error: "Invalid input." }, { status: 400 });
+    }
     const latestUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
     const ticker = body.focusTicker || extractTickerFromText(latestUser);
 

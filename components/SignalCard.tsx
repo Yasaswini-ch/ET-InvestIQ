@@ -12,7 +12,8 @@ interface SignalCardProps {
 export default function SignalCard({ signal, isWatchlisted = false, onWatchlistToggle }: SignalCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isHighConviction = signal.conviction === "high";
-  const confidencePct = isHighConviction ? 82 : 61;
+  const isLowConviction = signal.conviction === "low";
+  const confidencePct = isHighConviction ? 82 : isLowConviction ? 38 : 61;
 
   const upside = signal.targetPrice && signal.currentPrice
     ? (((signal.targetPrice - signal.currentPrice) / signal.currentPrice) * 100).toFixed(1)
@@ -20,9 +21,9 @@ export default function SignalCard({ signal, isWatchlisted = false, onWatchlistT
 
   return (
     <div className={`liquid-glass rounded-2xl border transition-all duration-200 overflow-hidden ${
-      isHighConviction ? "border-emerald-400/20" : "border-yellow-400/20"
+      isHighConviction ? "border-emerald-400/20" : isLowConviction ? "border-blue-400/20" : "border-yellow-400/20"
     }`}>
-      <div className={`h-1 w-full ${isHighConviction ? "bg-emerald-500" : "bg-yellow-500"}`}></div>
+      <div className={`h-1 w-full ${isHighConviction ? "bg-emerald-500" : isLowConviction ? "bg-blue-500" : "bg-yellow-500"}`}></div>
 
       <div className="p-5">
         <div className="flex justify-between items-start mb-4">
@@ -40,7 +41,9 @@ export default function SignalCard({ signal, isWatchlisted = false, onWatchlistT
             <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
               isHighConviction
                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-400/20"
-                : "bg-yellow-500/10 text-yellow-400 border border-yellow-400/20"
+                : isLowConviction
+                  ? "bg-blue-500/10 text-blue-400 border border-blue-400/20"
+                  : "bg-yellow-500/10 text-yellow-400 border border-yellow-400/20"
             }`}>
               {signal.conviction.toUpperCase()}
             </div>

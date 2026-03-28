@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import OhlcvChart from "@/components/charts/OhlcvChart";
 import TickerSearch from "@/components/charts/TickerSearch";
@@ -38,13 +37,6 @@ export default function ChartsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Link href="/" className="liquid-glass p-2 rounded-lg text-white/60 hover:text-white transition-all">
-          <ChevronLeft className="w-4 h-4" />
-        </Link>
-        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Back to Dashboard</span>
-      </div>
-
       <PageHeader
         title="Chart Pattern Intelligence"
         description="Analyze NSE stock charts with real OHLCV data and AI-detected patterns like breakouts, reversals, and support/resistance zones."

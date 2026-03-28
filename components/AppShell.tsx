@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, Shield } from "lucide-react";
+import { ArrowUpRight, MessageCircleMore, Shield, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import ChatDrawer from "@/components/ChatDrawer";
 
 interface NavItem {
   label: string;
@@ -15,17 +17,30 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "X-Ray", href: "/xray" },
   { label: "Radar", href: "/radar" },
-  { label: "My Briefing", href: "/briefing", accent: "text-emerald-400 glow" },
-  { label: "Chat", href: "/chat" },
-  { label: "Charts", href: "/charts" },
   { label: "SIP Tools", href: "/sip" },
-  { label: "Learn", href: "/newbies" },
   { label: "Scam Shield", href: "/scamcheck", icon: Shield, accent: "text-red-400" },
 ];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+export default function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname() ?? "/";
   const isLanding = pathname === "/";
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [hasPortfolioContext, setHasPortfolioContext] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const readContext = () => {
+      try {
+        setHasPortfolioContext(Boolean(localStorage.getItem("xray_result")));
+      } catch {
+        setHasPortfolioContext(false);
+      }
+    };
+
+    readContext();
+    window.addEventListener("storage", readContext);
+    return () => window.removeEventListener("storage", readContext);
+  }, [pathname]);
 
   return (
     <div className="bg-black text-white min-h-screen">
@@ -39,7 +54,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="hidden md:flex items-center gap-1 liquid-glass rounded-full px-2 py-1">
               {NAV_ITEMS.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 const Icon = item.icon;
                 return (
                   <Link
@@ -72,6 +87,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <main className={isLanding ? "" : "pt-24 pb-16 px-6 md:px-12 lg:px-16 max-w-7xl mx-auto"}>
         {children}
       </main>
+
+      <button
+        onClick={() => setChatDrawerOpen((open) => !open)}
+        className={`fixed right-4 top-1/2 -translate-y-1/2 z-[999] liquid-glass-strong inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-emerald-300 shadow-2xl shadow-black/40 border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-xl`}
+        aria-label={chatDrawerOpen ? "Close AI Assistant" : "Open AI Assistant"}
+      >
+        {hasPortfolioContext && !chatDrawerOpen && (
+          <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-pulse" />
+        )}
+        <span className={`${hasPortfolioContext ? "text-emerald-400 animate-pulse" : ""}`}>
+          {chatDrawerOpen ? <X className="w-4 h-4" /> : <MessageCircleMore className="w-4 h-4" />}
+        </span>
+        <span>Ask AI</span>
+      </button>
+
+      <ChatDrawer isOpen={chatDrawerOpen} onClose={() => setChatDrawerOpen(false)} />
     </div>
   );
 }

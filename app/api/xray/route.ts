@@ -127,6 +127,13 @@ import { NextRequest, NextResponse } from "next/server";
           { status: 400 }
         );
       }
+      const pdfPreview = new TextDecoder().decode(headerBuffer.slice(0, 50000));
+      if (pdfPreview.includes("/JavaScript") || pdfPreview.includes("/JS ")) {
+        return NextResponse.json(
+          { error: "PDF contains active content and cannot be processed." },
+          { status: 400 }
+        );
+      }
     } 
  
      const buffer = Buffer.from(await file.arrayBuffer()); 

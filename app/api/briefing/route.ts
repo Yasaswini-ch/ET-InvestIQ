@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { generateStructuredJSON } from "@/lib/gemini";
 import { rateLimit, getIP } from "@/lib/rateLimit";
+import { buildBriefingFallback } from "@/lib/briefing/fallback";
 
 const SYSTEM = `You are ET InvestIQ's personal AI briefing engine for Indian retail investors.
 Your job: connect a user's portfolio to today's market context and generate highly specific, actionable alerts.
@@ -23,15 +24,15 @@ function buildPrompt(portfolioContext: Record<string, unknown> | null) {
     ? `
 INVESTOR PORTFOLIO:
 - Investor: ${portfolioContext.investorName}
-- Total invested: ₹${Number(portfolioContext.totalInvested)?.toLocaleString("en-IN")}
-- Current value: ₹${Number(portfolioContext.currentValue)?.toLocaleString("en-IN")}
+- Total invested: Rs. ${Number(portfolioContext.totalInvested)?.toLocaleString("en-IN")}
+- Current value: Rs. ${Number(portfolioContext.currentValue)?.toLocaleString("en-IN")}
 - XIRR: ${portfolioContext.overallXIRR}%
 - Health score: ${portfolioContext.portfolioHealthScore}/100
 - Risk profile: ${portfolioContext.riskProfile}
-- Funds held: ${(portfolioContext.funds as {name: string}[])?.map((f) => f.name).join(", ")}
-- Key issues: ${(portfolioContext.insights as {title: string}[])?.map((i) => i.title).join("; ")}
+- Funds held: ${(portfolioContext.funds as { name: string }[])?.map((f) => f.name).join(", ")}
+- Key issues: ${(portfolioContext.insights as { title: string }[])?.map((i) => i.title).join("; ")}
 `
-    : "No portfolio uploaded — generate general market alerts for an Indian retail investor.";
+    : "No portfolio uploaded - generate general market alerts for an Indian retail investor.";
 
   return `
 Today is ${today}. Generate a personalised daily briefing for this investor.
@@ -75,14 +76,23 @@ export async function POST(req: NextRequest) {
   try {
     const { portfolioContext } = await req.json();
     const prompt = buildPrompt(portfolioContext);
-    const briefing = await generateStructuredJSON<any>(prompt, SYSTEM);
-    briefing.generatedAt = new Date().toISOString();
-    return Response.json(briefing);
+
+    try {
+      const briefing = await generateStructuredJSON<any>(prompt, SYSTEM);
+      briefing.generatedAt = new Date().toISOString();
+
+      if (!Array.isArray(briefing.alerts)) {
+        throw new Error("Invalid briefing payload");
+      }
+
+      return Response.json(briefing);
+    } catch (aiError) {
+      console.error("Briefing AI fallback used:", aiError);
+      return Response.json(buildBriefingFallback(portfolioContext));
+    }
   } catch (err) {
     console.error("Briefing error:", err);
-    return Response.json(
-      { error: "Failed to generate briefing" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to generate briefing" }, { status: 500 });
   }
 }
+

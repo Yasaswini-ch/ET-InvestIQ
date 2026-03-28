@@ -8,13 +8,11 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCcw,
-  ChevronLeft,
   ArrowRight,
   AlertTriangle,
   Info,
   TrendingUp,
 } from "lucide-react";
-import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import MetricCard from "@/components/MetricCard";
 import HealthScoreRing from "@/components/HealthScoreRing";
@@ -100,16 +98,6 @@ export default function XRayPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-3 mb-2">
-        <Link
-          href="/"
-          className="liquid-glass p-2 rounded-lg text-white/60 hover:text-white transition-all"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </Link>
-        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Back to Dashboard</span>
-      </div>
-
       <PageHeader
         title="Portfolio X-Ray"
         description="Upload your CAS statement (CAMS/KFintech) to get a comprehensive AI-driven analysis of your mutual fund portfolio."

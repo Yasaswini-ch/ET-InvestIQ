@@ -32,10 +32,6 @@ const navItems = [
   { label: "Platform", href: "/xray" },
   { label: "Features", href: "/#features" },
   { label: "Radar", href: "/radar" },
-  { label: "My Briefing", href: "/briefing" },
-  { label: "SIP Tools", href: "/sip" },
-  { label: "Charts", href: "/charts" },
-  { label: "Learn", href: "/newbies" },
   { label: "Scam Shield", href: "/scamcheck" },
 ] as const;
 
@@ -63,12 +59,12 @@ const tools = [
     visual: <RadarVisual />,
   },
   {
-    title: "Market Intelligence Chat",
-    heading: "Ask anything about the Indian market.",
+    title: "Persistent AI Assistant",
+    heading: "Ask anything about the Indian market from anywhere.",
     description:
-      "Chat with live Nifty/Sensex context, recent radar events, and your own portfolio data baked in. Citations included - no hallucination.",
-    chips: ["Live Market Context", "Portfolio-Aware", "Cited Responses"],
-    button: "Open Chat",
+      "A floating assistant available on every page with live Nifty/Sensex context, recent radar events, and your own portfolio data baked in.",
+    chips: ["Always Available", "Portfolio-Aware", "Cited Responses"],
+    button: "Open Assistant",
     href: "/chat",
     reverse: false,
     visual: <ChatVisual />,
@@ -121,12 +117,23 @@ const tools = [
     title: "SIP Tools",
     heading: "Plan your SIPs like a pro.",
     description:
-      "SIP Time Machine, Goal Calculator, Portfolio Stress Test — a full suite to model returns, stress-test your portfolio against market crashes, and plan goal-based investing with confidence.",
-    chips: ["SIP Time Machine", "Goal Calculator", "Stress Test", "Crash Scenarios"],
+      "SIP Time Machine, Goal Calculator, and Portfolio Stress Test help you model past performance, plan future contributions, and understand crash resilience with confidence.",
+    chips: ["SIP Time Machine", "Goal Calculator", "Portfolio Stress Test"],
     button: "Open SIP Tools",
     href: "/sip",
     reverse: true,
     visual: <SIPToolsVisual />,
+  },
+  {
+    title: "Market Intelligence Layers",
+    heading: "Macro policy. Smart money. Your behavior.",
+    description:
+      "A three-layer intelligence centre connecting Budget impacts, insider promoter buying signals, and behavioral market crash modeling directly to your portfolio.",
+    chips: ["Budget Assessor", "Insider Tracker", "Behavioral Coach"],
+    button: "Open Intelligence",
+    href: "/intelligence",
+    reverse: false,
+    visual: <IntelligenceVisual />,
   },
 ];
 
@@ -159,7 +166,7 @@ export default function Home() {
 
       <motion.section className="py-16 text-center" {...sectionMotion}>
         <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-6">
-          14 Crore+ demat accounts &nbsp;·&nbsp; 8 AI tools &nbsp;·&nbsp; Real BSE/NSE/SEBI data &nbsp;·&nbsp; 100% free
+          14 Crore+ demat accounts &nbsp;·&nbsp; 9 AI tools &nbsp;·&nbsp; Real BSE/NSE/SEBI data &nbsp;·&nbsp; 100% free
         </span>
         <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6 text-2xl md:text-3xl font-heading italic text-white">
           <span>BSE</span>
@@ -175,7 +182,7 @@ export default function Home() {
       <section id="features" className="py-24 px-6 md:px-16 lg:px-24 bg-black">
         <motion.div className="text-center mb-16" {...sectionMotion}>
           <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-4">
-            All Eight Tools
+            All Nine Tools
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.9]">
             Pro intelligence. Zero jargon.
@@ -252,7 +259,7 @@ export default function Home() {
         <motion.div className="relative z-10 liquid-glass rounded-3xl p-12 md:p-16 max-w-4xl mx-auto" {...sectionMotion}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
-              ["8 Tools", "In one platform"],
+              ["9 Tools", "In one platform"],
               ["3 Live Feeds", "BSE · NSE · SEBI"],
               ["Real OHLCV", "Yahoo Finance data"],
               ["Zero Jargon", "Explained in plain English"],
@@ -402,9 +409,24 @@ function Hero() {
         </motion.p>
 
         <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.6, ease: "easeOut" }}
+          className="mt-8 inline-flex items-center gap-4 rounded-full liquid-glass px-5 py-3 border border-emerald-500/20"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300 font-heading italic text-xl">
+            17.8
+          </div>
+          <div className="text-left">
+            <p className="text-white text-sm font-medium">crore demat accounts in India</p>
+            <p className="text-white/40 text-xs">CDSL investor accounts, 28 Feb 2026</p>
+          </div>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.7, ease: "easeOut" }}
+          transition={{ delay: 1.2, duration: 0.7, ease: "easeOut" }}
           className="flex justify-center mt-10"
         >
           <Link
@@ -606,8 +628,8 @@ function SIPToolsVisual() {
   return (
     <div className="liquid-glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-white font-body text-sm">SIP Time Machine</p>
-        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">10Y simulation</span>
+        <p className="text-white font-body text-sm">SIP Tools</p>
+        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">Time machine + goals + stress</span>
       </div>
       <div className="h-24 flex items-end gap-1">
         {[22, 28, 24, 35, 30, 44, 38, 52, 46, 60, 55, 72].map((h, i) => (
@@ -672,6 +694,28 @@ function ScamShieldVisual() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function IntelligenceVisual() {
+  return (
+    <div className="liquid-glass rounded-2xl p-6 space-y-4">
+      {[ 
+        [1, "Policy", "Budget 2026-27 impact", "border-blue-500/50", "text-blue-500"],
+        [2, "Smart Money", "Promoter accumulation", "border-amber-500/50", "text-amber-500"],
+        [3, "Behavioral", "SIP value in drawdowns", "border-emerald-500/50", "text-emerald-500"]
+      ].map(([num, title, sub, border, textClr]) => (
+        <div key={num as number} className={`liquid-glass rounded-xl p-3 border-l-2 ${border} flex items-center gap-3 bg-white/[0.01]`}>
+           <div className="liquid-glass-strong rounded-full w-6 h-6 flex items-center justify-center shrink-0">
+             <span className={`font-body text-[10px] font-bold ${textClr}`}>L{num}</span>
+           </div>
+           <div>
+              <p className="text-white text-xs font-medium font-body leading-tight">{title as string}</p>
+              <p className="text-white/50 text-[10px] font-body mt-0.5">{sub as string}</p>
+           </div>
+        </div>
+      ))}
     </div>
   );
 }

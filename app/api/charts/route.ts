@@ -10,6 +10,61 @@ type AiPatternPayload = {
   similarHistorical: string[];
 };
 
+function buildFallbackPatterns(summary: ReturnType<typeof summarizeCandles>): AiPatternPayload {
+  const patterns: ChartPatternInsight[] = [];
+  const confidenceBase = summary.trend === "bullish" ? 72 : summary.trend === "bearish" ? 68 : 58;
+
+  if (summary.breakoutPoint) {
+    patterns.push({
+      name: summary.trend === "bearish" ? "Breakdown Pressure" : "Breakout Setup",
+      bias: summary.trend === "bearish" ? "bearish" : "bullish",
+      confidence: Math.min(95, confidenceBase + 8),
+      successRate: Math.min(90, confidenceBase + 5),
+      explanation:
+        summary.trend === "bullish"
+          ? "Price is trading near resistance with bullish structure and a possible breakout confirmation."
+          : "Price is leaning into support or losing structure, which can extend downside if sellers continue to press.",
+      riskNote: summary.volumeSpike
+        ? "Volume is elevated, so confirmation or rejection can happen quickly."
+        : "Watch for a volume confirmation before acting aggressively.",
+    });
+  } else {
+    patterns.push({
+      name: summary.trend === "bullish" ? "Trend Continuation" : summary.trend === "bearish" ? "Trend Breakdown" : "Range Compression",
+      bias: summary.trend,
+      confidence: confidenceBase,
+      successRate: Math.max(45, confidenceBase - 6),
+      explanation:
+        summary.trend === "neutral"
+          ? "The chart is consolidating between support and resistance, so patience matters more than chasing."
+          : summary.trend === "bullish"
+            ? "Momentum is constructive, but the move still needs a fresh follow-through candle."
+            : "Momentum is weak, and sellers remain in control until price recovers key levels.",
+      riskNote: summary.volumeSpike
+        ? "Volume is elevated, so the setup can resolve faster than usual."
+        : "Keep risk tight because the setup is still developing.",
+    });
+  }
+
+  if (summary.volumeSpike) {
+    patterns.push({
+      name: "Volume Expansion",
+      bias: summary.trend === "bearish" ? "bearish" : "bullish",
+      confidence: Math.min(88, confidenceBase + 4),
+      successRate: Math.min(85, confidenceBase + 3),
+      explanation: "The latest candle shows a meaningful volume surge, which often precedes a stronger move or a rejection from the current zone.",
+      riskNote: "If the move fails, the reversal can be sharp because volume is already high.",
+    });
+  }
+
+  const similarHistorical = [
+    `${summary.trend === "bullish" ? "Previous bullish" : summary.trend === "bearish" ? "Previous bearish" : "Previous range-bound"} setups on this stock often resolved after a clean test of support and resistance.`,
+    `When price stayed above the ${summary.supportZones[0]?.toFixed(2) || "key support"} zone, follow-through improved over the next few sessions.`,
+  ];
+
+  return { patterns: patterns.slice(0, 3), similarHistorical };
+}
+
 export const dynamic = "force-dynamic";
 
 const SYSTEM = `You are a technical analyst for Indian equities.
@@ -47,8 +102,10 @@ export async function GET(req: NextRequest) {
     }
 
     const summary = summarizeCandles(candles);
-    const ai = await generateStructuredJSON<AiPatternPayload>(
-      `Analyze this stock setup and respond with:
+    let aiPayload: AiPatternPayload | null = null;
+    try {
+      aiPayload = await generateStructuredJSON<AiPatternPayload>(
+        `Analyze this stock setup and respond with:
 {
   "patterns": [
     {
@@ -69,8 +126,14 @@ ${JSON.stringify({ ticker, range, interval, summary }, null, 2)}
 Return 1 to 3 useful patterns only.
 Also include 1 to 3 "similarHistorical" lines in this style:
 "Last time RELIANCE formed this setup (Mar 2023), it moved +14% in 3 weeks."`,
-      SYSTEM
-    );
+        SYSTEM
+      );
+    } catch (error) {
+      console.error("Charts AI fallback used:", error);
+    }
+
+    const fallbackPayload = buildFallbackPatterns(summary);
+    const ai = aiPayload ?? fallbackPayload;
 
     const payload: ChartPatternResponse = {
       ticker,
@@ -87,8 +150,8 @@ Also include 1 to 3 "similarHistorical" lines in this style:
         breakoutPoint: summary.breakoutPoint,
         patternWindow: summary.patternWindow,
       },
-      patterns: ai.patterns ?? [],
-      similarHistorical: ai.similarHistorical ?? [],
+      patterns: ai.patterns ?? fallbackPayload.patterns,
+      similarHistorical: ai.similarHistorical ?? fallbackPayload.similarHistorical,
       generatedAt: new Date().toISOString(),
     };
 

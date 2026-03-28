@@ -4,6 +4,7 @@ import { Instrument_Serif, Barlow, Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
+import NameCaptureModal from "@/components/NameCaptureModal";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className="bg-black text-white font-sans selection:bg-emerald-900 selection:text-emerald-100">
         <AppShell>{children}</AppShell>
         <DisclaimerBanner />
+        <NameCaptureModal />
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { generateStructuredJSON } from "@/lib/gemini"
 import { getHistoricalOHLCV } from "@/lib/yfinance"
 import { ScamAnalysis, ScamCheckResult, VolumeCheck } from "@/lib/types/scamcheck"
+import { buildScamFallback } from "@/lib/scamcheck/fallback"
 
 export const dynamic = "force-dynamic"
 
@@ -22,7 +23,7 @@ const TICKER_MAP: Record<string, string> = {
   "paytm": "PAYTM.NS",
 }
 
-function extractTicker(message: string): string | null {
+export function extractTicker(message: string): string | null {
   const lower = message.toLowerCase()
 
   for (const [key, ticker] of Object.entries(TICKER_MAP)) {
@@ -141,10 +142,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  try {
-    const body = await req.json() as { message?: string }
-    const message = body?.message
+  const body = await req.json().catch(() => ({} as { message?: string }));
+  const message = body?.message ?? "";
 
+  try {
     if (!message || message.trim().length === 0) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
     }
@@ -152,10 +153,7 @@ export async function POST(req: NextRequest) {
     const ticker = extractTicker(message)
 
     const [analysis, volumeCheck] = await Promise.all([
-      generateStructuredJSON<ScamAnalysis>(message, SYSTEM_PROMPT).catch((err) => {
-        console.error("Gemini scam analysis failed:", err)
-        throw err
-      }),
+      generateStructuredJSON<ScamAnalysis>(message, SYSTEM_PROMPT),
       ticker ? checkVolumeAnomaly(ticker) : Promise.resolve(null),
     ])
 
@@ -168,6 +166,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("Scam check API failed:", error)
-    return NextResponse.json({ error: "Analysis failed" }, { status: 500 })
+    const ticker = message ? extractTicker(message) : null
+    const volumeCheck = ticker ? await checkVolumeAnomaly(ticker) : null
+
+    return NextResponse.json({
+      analysis: buildScamFallback(message, ticker),
+      volumeCheck,
+      analyzedAt: new Date().toISOString(),
+    } satisfies ScamCheckResult)
   }
 }

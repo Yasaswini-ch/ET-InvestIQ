@@ -1,8 +1,24 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import { Search, Bell, User, Settings } from 'lucide-react';
+import { DEMO_INVESTOR, getInvestorName } from '@/lib/investor';
 
 export default function TopNav() {
+  const [investorName, setInvestorName] = useState<string>(DEMO_INVESTOR.name);
+
+  useEffect(() => {
+    setInvestorName(getInvestorName());
+  }, []);
+
+  const initials = investorName
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "IV";
+
   return (
     <header className="fixed top-0 right-0 left-60 h-14 bg-white/90 backdrop-blur-md border-b border-[#E8DDD2] z-50 flex items-center justify-between px-6">
       <div className="flex items-center gap-4 flex-1 max-w-md">
@@ -26,11 +42,11 @@ export default function TopNav() {
         </button>
         <div className="flex items-center gap-2.5 pl-4 border-l border-[#E8DDD2]">
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-semibold text-[#111827]">Rahul Sharma</p>
+            <p className="text-xs font-semibold text-[#111827]">{investorName}</p>
             <p className="text-[10px] text-[#6B7280]">Premium Plan</p>
           </div>
           <div className="w-8 h-8 bg-[#E8651A] rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-            RS
+            {initials}
           </div>
         </div>
       </div>

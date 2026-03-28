@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Bot, Sparkles, ChevronLeft, Trash2, Info, Link2, X } from "lucide-react";
-import Link from "next/link";
+import { Send, User, Bot, Sparkles, Trash2, Info, Link2, X } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { ChatSource, PortfolioChatContext } from "@/lib/types/chat";
 
@@ -101,13 +100,6 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] max-w-5xl mx-auto">
-      <div className="flex items-center gap-3 mb-2">
-        <Link href="/" className="liquid-glass p-2 rounded-lg text-white/60 hover:text-white transition-all">
-          <ChevronLeft className="w-4 h-4" />
-        </Link>
-        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Back to Dashboard</span>
-      </div>
-
       <PageHeader
         title="Market Intelligence"
         description="Ask our AI about stocks, market structure, portfolio strategy, or macro context."
