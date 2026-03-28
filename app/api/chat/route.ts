@@ -44,9 +44,68 @@ function unwrapAnswerFromJsonBlock(text: string): string {
 
   const deFenced = raw.replace(/```json\n?|\n?```/g, "").trim();
 
+  const extractAnswerFromBrokenJson = (candidate: string): string | null => {
+    const keyIndex = candidate.indexOf('"answer"');
+    if (keyIndex === -1) return null;
+
+    const colonIndex = candidate.indexOf(":", keyIndex);
+    if (colonIndex === -1) return null;
+
+    const firstQuoteIndex = candidate.indexOf('"', colonIndex);
+    if (firstQuoteIndex === -1) return null;
+
+    let i = firstQuoteIndex + 1;
+    let escaped = false;
+    let value = "";
+
+    while (i < candidate.length) {
+      const ch = candidate[i];
+      if (escaped) {
+        value += ch;
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === '"') {
+        break;
+      } else {
+        value += ch;
+      }
+      i += 1;
+    }
+
+    if (!value.trim()) return null;
+
+    return value
+      .replace(/\\n/g, "\n")
+      .replace(/\\"/g, '"')
+      .replace(/\\t/g, " ")
+      .trim();
+  };
+
   const tryParse = (candidate: string): string | null => {
     try {
-      const parsed = JSON.parse(candidate) as { answer?: unknown };
+      const parsed = JSON.parse(candidate) as unknown;
+      if (typeof parsed === "string") {
+        return unwrapAnswerFromJsonBlock(parsed);
+      }
+      const asObj = parsed as { answer?: unknown };
+      if (typeof asObj.answer === "string" && asObj.answer.trim()) {
+        return asObj.answer.trim();
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const tryParseEscaped = (candidate: string): string | null => {
+    try {
+      const unescaped = candidate
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, "\n")
+        .replace(/\\t/g, " ")
+        .trim();
+      const parsed = JSON.parse(unescaped) as { answer?: unknown };
       if (typeof parsed.answer === "string" && parsed.answer.trim()) {
         return parsed.answer.trim();
       }
@@ -58,6 +117,10 @@ function unwrapAnswerFromJsonBlock(text: string): string {
 
   const direct = tryParse(deFenced);
   if (direct) return direct;
+  const escaped = tryParseEscaped(deFenced);
+  if (escaped) return escaped;
+  const broken = extractAnswerFromBrokenJson(deFenced);
+  if (broken) return broken;
 
   const firstBrace = deFenced.indexOf("{");
   const lastBrace = deFenced.lastIndexOf("}");
@@ -65,6 +128,10 @@ function unwrapAnswerFromJsonBlock(text: string): string {
     const fragment = deFenced.slice(firstBrace, lastBrace + 1);
     const fromFragment = tryParse(fragment);
     if (fromFragment) return fromFragment;
+    const fromEscapedFragment = tryParseEscaped(fragment);
+    if (fromEscapedFragment) return fromEscapedFragment;
+    const fromBrokenFragment = extractAnswerFromBrokenJson(fragment);
+    if (fromBrokenFragment) return fromBrokenFragment;
   }
 
   return deFenced;
