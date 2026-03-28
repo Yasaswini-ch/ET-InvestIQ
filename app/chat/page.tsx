@@ -190,6 +190,31 @@ export default function ChatPage() {
                 </div>
               </motion.div>
             ))}
+            {isLoading && (
+              <motion.div
+                key="assistant-typing"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-3 flex-row"
+              >
+                <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center border bg-emerald-500/10 border-emerald-400/20 text-emerald-400">
+                  <Bot className="w-4 h-4" />
+                </div>
+
+                <div className="flex flex-col max-w-[78%] items-start">
+                  <div className="p-4 rounded-xl text-sm leading-relaxed bg-white/5 border border-white/10 text-white/80 rounded-tl-none">
+                    <div className="flex gap-1 py-0.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce"></span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-white/40 mt-1 font-semibold uppercase tracking-wider px-1">
+                    ET InvestIQ AI
+                  </span>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
