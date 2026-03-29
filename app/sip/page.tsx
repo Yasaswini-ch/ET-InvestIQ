@@ -13,7 +13,6 @@ import {
 import {
   AlertCircle,
   ArrowRight,
-  ArrowUpRight,
   CalendarClock,
   CheckCircle2,
   ChevronDown,
@@ -393,45 +392,6 @@ export default function SIPPage() {
         title="SIP Tools"
         description="Model historical SIP performance, plan goal-based investing, and stress-test your portfolio through market crashes."
       />
-
-      <div className="liquid-glass rounded-2xl border border-white/10 p-5 space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {[
-            "SIP Time Machine",
-            "Goal Calculator",
-            "Portfolio Stress Test",
-            "What-If Simulator",
-          ].map((label) => (
-            <span
-              key={label}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium border ${
-                label === "What-If Simulator"
-                  ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                  : "border-white/10 bg-white/5 text-white/60"
-              }`}
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-center rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300">New SIP Subfeature</p>
-            <h2 className="mt-1 text-xl font-heading italic text-white">Portfolio What-If Simulator</h2>
-            <p className="mt-2 text-sm text-white/65 max-w-2xl">
-              Compare your actual corpus path against a shifted allocation scenario without leaving SIP Tools.
-            </p>
-          </div>
-          <button
-            onClick={() => setActiveTab("whatif")}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-medium text-black hover:bg-emerald-400"
-          >
-            Open What-If
-            <ArrowUpRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
       <div className="flex border-b border-white/10 overflow-x-auto">
         <TabButton active={activeTab === "timemachine"} onClick={() => setActiveTab("timemachine")}>
