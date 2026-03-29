@@ -1,6 +1,6 @@
 import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
-import { summarizeCandles } from "@/lib/chart-analysis";
+import { buildHistoricalEdge, summarizeCandles } from "@/lib/chart-analysis";
 import { generateStructuredJSON } from "@/lib/gemini";
 import { ChartPatternInsight, ChartPatternResponse } from "@/lib/types/market";
 import { getHistoricalOHLCV, normalizeNseTicker } from "@/lib/yfinance";
@@ -10,7 +10,10 @@ type AiPatternPayload = {
   similarHistorical: string[];
 };
 
-function buildFallbackPatterns(summary: ReturnType<typeof summarizeCandles>): AiPatternPayload {
+function buildFallbackPatterns(
+  summary: ReturnType<typeof summarizeCandles>,
+  historicalEdge: ReturnType<typeof buildHistoricalEdge>
+): AiPatternPayload {
   const patterns: ChartPatternInsight[] = [];
   const confidenceBase = summary.trend === "bullish" ? 72 : summary.trend === "bearish" ? 68 : 58;
 
@@ -27,6 +30,11 @@ function buildFallbackPatterns(summary: ReturnType<typeof summarizeCandles>): Ai
       riskNote: summary.volumeSpike
         ? "Volume is elevated, so confirmation or rejection can happen quickly."
         : "Watch for a volume confirmation before acting aggressively.",
+      invalidationLevel: historicalEdge.invalidationLevel,
+      rewardToRisk: historicalEdge.rewardToRisk,
+      sampleSize: historicalEdge.sampleSize,
+      averageReturn: historicalEdge.averageReturn,
+      horizonDays: historicalEdge.horizonDays,
     });
   } else {
     patterns.push({
@@ -43,6 +51,11 @@ function buildFallbackPatterns(summary: ReturnType<typeof summarizeCandles>): Ai
       riskNote: summary.volumeSpike
         ? "Volume is elevated, so the setup can resolve faster than usual."
         : "Keep risk tight because the setup is still developing.",
+      invalidationLevel: historicalEdge.invalidationLevel,
+      rewardToRisk: historicalEdge.rewardToRisk,
+      sampleSize: historicalEdge.sampleSize,
+      averageReturn: historicalEdge.averageReturn,
+      horizonDays: historicalEdge.horizonDays,
     });
   }
 
@@ -54,12 +67,17 @@ function buildFallbackPatterns(summary: ReturnType<typeof summarizeCandles>): Ai
       successRate: Math.min(85, confidenceBase + 3),
       explanation: "The latest candle shows a meaningful volume surge, which often precedes a stronger move or a rejection from the current zone.",
       riskNote: "If the move fails, the reversal can be sharp because volume is already high.",
+      invalidationLevel: historicalEdge.invalidationLevel,
+      rewardToRisk: historicalEdge.rewardToRisk,
+      sampleSize: historicalEdge.sampleSize,
+      averageReturn: historicalEdge.averageReturn,
+      horizonDays: historicalEdge.horizonDays,
     });
   }
 
   const similarHistorical = [
-    `${summary.trend === "bullish" ? "Previous bullish" : summary.trend === "bearish" ? "Previous bearish" : "Previous range-bound"} setups on this stock often resolved after a clean test of support and resistance.`,
-    `When price stayed above the ${summary.supportZones[0]?.toFixed(2) || "key support"} zone, follow-through improved over the next few sessions.`,
+    `${historicalEdge.setupLabel} on this stock showed a ${historicalEdge.winRate}% win rate over the last ${historicalEdge.sampleSize} similar setups.`,
+    `Average move after ${historicalEdge.horizonDays} sessions was ${historicalEdge.averageReturn >= 0 ? "+" : ""}${historicalEdge.averageReturn}% with max drawdown near ${historicalEdge.maxDrawdown}%.`,
   ];
 
   return { patterns: patterns.slice(0, 3), similarHistorical };
@@ -132,8 +150,17 @@ Also include 1 to 3 "similarHistorical" lines in this style:
       console.error("Charts AI fallback used:", error);
     }
 
-    const fallbackPayload = buildFallbackPatterns(summary);
+    const historicalEdge = buildHistoricalEdge(candles, summary);
+    const fallbackPayload = buildFallbackPatterns(summary, historicalEdge);
     const ai = aiPayload ?? fallbackPayload;
+    const patterns = (ai.patterns ?? fallbackPayload.patterns).map((pattern) => ({
+      ...pattern,
+      invalidationLevel: pattern.invalidationLevel ?? historicalEdge.invalidationLevel,
+      rewardToRisk: pattern.rewardToRisk ?? historicalEdge.rewardToRisk,
+      sampleSize: pattern.sampleSize ?? historicalEdge.sampleSize,
+      averageReturn: pattern.averageReturn ?? historicalEdge.averageReturn,
+      horizonDays: pattern.horizonDays ?? historicalEdge.horizonDays,
+    }));
 
     const payload: ChartPatternResponse = {
       ticker,
@@ -150,8 +177,9 @@ Also include 1 to 3 "similarHistorical" lines in this style:
         breakoutPoint: summary.breakoutPoint,
         patternWindow: summary.patternWindow,
       },
-      patterns: ai.patterns ?? fallbackPayload.patterns,
+      patterns,
       similarHistorical: ai.similarHistorical ?? fallbackPayload.similarHistorical,
+      historicalEdge,
       generatedAt: new Date().toISOString(),
     };
 

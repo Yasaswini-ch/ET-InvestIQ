@@ -3,7 +3,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import MarketMoodIndicator from "@/components/MarketMoodIndicator";
 import { ArrowRight, BarChart3, BrainCircuit, Clock3, ExternalLink, LineChart, Radar, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { STORAGE_KEYS } from "@/lib/storage";
 
 interface BriefingAlert {
   id: string;
@@ -48,7 +51,7 @@ export default function BriefingPage() {
   const [hasPortfolio, setHasPortfolio] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("xray_result");
+    const stored = localStorage.getItem(STORAGE_KEYS.xrayResult) || localStorage.getItem(STORAGE_KEYS.legacyXrayResult);
     setHasPortfolio(!!stored);
   }, []);
 
@@ -57,7 +60,7 @@ export default function BriefingPage() {
     setError("");
 
     try {
-      const portfolioContext = localStorage.getItem("xray_result");
+      const portfolioContext = localStorage.getItem(STORAGE_KEYS.xrayResult) || localStorage.getItem(STORAGE_KEYS.legacyXrayResult);
       const res = await fetch("/api/briefing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,7 +102,16 @@ export default function BriefingPage() {
       <PageHeader
         title="My Briefing"
         description="A concise daily briefing connecting your portfolio, market signals, and next best actions."
+        action={<ExportPdfButton />}
       />
+
+      <div className="print-header print-only">
+        ET InvestIQ Briefing Report
+      </div>
+
+      <div className="max-w-xl">
+        <MarketMoodIndicator compact />
+      </div>
 
       {!briefing && !loading && (
         <div className="liquid-glass rounded-2xl p-8 text-center border border-white/10">
@@ -176,7 +188,7 @@ export default function BriefingPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-6"
+            className="space-y-6 print-section"
           >
             <div className="liquid-glass rounded-2xl p-6 border border-white/10">
               <div className="flex items-start justify-between gap-6">

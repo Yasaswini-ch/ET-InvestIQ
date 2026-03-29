@@ -23,6 +23,8 @@ import RebalancingPlan from "@/components/RebalancingPlan";
 import FundDetailsTable from "@/components/FundDetailsTable";
 import { formatCompactINR, formatINR } from "@/lib/utils";
 import ShareCard from "@/components/ShareCard";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { STORAGE_KEYS } from "@/lib/storage";
 
 export default function XRayPage() {
   const [analysis, setAnalysis] = useState<any>(null);
@@ -73,8 +75,9 @@ export default function XRayPage() {
           topInsights: Array.isArray(data.insights) ? data.insights.slice(0, 3).map((i: any) => i.title) : [],
           rebalancingSummary: data.rebalancingPlan?.summary,
         };
-        localStorage.setItem("et_portfolio_context", JSON.stringify(portfolioContext));
-        localStorage.setItem("xray_result", JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEYS.portfolioContext, JSON.stringify(portfolioContext));
+        localStorage.setItem(STORAGE_KEYS.xrayResult, JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEYS.legacyXrayResult, JSON.stringify(data));
       } catch {
         // Ignore local storage failures.
       }
@@ -101,7 +104,10 @@ export default function XRayPage() {
       <PageHeader
         title="Portfolio X-Ray"
         description="Upload your CAS statement (CAMS/KFintech) to get a comprehensive AI-driven analysis of your mutual fund portfolio."
+        action={<ExportPdfButton />}
       />
+
+      <div className="print-header print-only">ET InvestIQ Portfolio X-Ray Report</div>
 
       <AnimatePresence mode="wait">
         {!analysis && !isLoading && (
@@ -150,7 +156,7 @@ export default function XRayPage() {
         )}
 
         {analysis && (
-          <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+          <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 print-section">
             <div className="flex items-center justify-between gap-4 p-5 liquid-glass rounded-2xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-400/20 rounded-xl flex items-center justify-center text-emerald-400">

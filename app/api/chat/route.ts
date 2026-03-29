@@ -1,7 +1,5 @@
 import { rateLimit, getIP } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { buildMarketContext } from "@/lib/chat/context";
 import { buildSources } from "@/lib/chat/sources";
 import { extractTickerFromText, pickRelevantSignals } from "@/lib/chat/tools";
@@ -12,7 +10,7 @@ import { generateChatJSON } from "@/lib/chat/llm";
 import { enrichSignalsWithQuotes } from "@/lib/radar/enrich";
 import { normalizeEventsToSignals } from "@/lib/radar/normalize";
 import { rankSignals } from "@/lib/radar/scoring";
-import { ChatRequestBody, ChatResponsePayload } from "@/lib/types/chat";
+import { ChatReasoningStep, ChatRequestBody, ChatResponsePayload } from "@/lib/types/chat";
 import { MarketSnapshot } from "@/lib/types/market";
 import { RadarSignal } from "@/lib/types/radar";
 import { getIndianMarketData, getStockQuote } from "@/lib/yfinance";
@@ -26,7 +24,8 @@ Rules:
 - Return JSON only:
 {
   "answer": string,
-  "suggested": string[]
+  "suggested": string[],
+  "reasoningSteps": [{ "label": string, "detail": string }]
 }`;
 
 const INJECTION_PATTERNS = [
@@ -54,23 +53,23 @@ function unwrapAnswerFromJsonBlock(text: string): string {
     const firstQuoteIndex = candidate.indexOf('"', colonIndex);
     if (firstQuoteIndex === -1) return null;
 
-    let i = firstQuoteIndex + 1;
+    let index = firstQuoteIndex + 1;
     let escaped = false;
     let value = "";
 
-    while (i < candidate.length) {
-      const ch = candidate[i];
+    while (index < candidate.length) {
+      const char = candidate[index];
       if (escaped) {
-        value += ch;
+        value += char;
         escaped = false;
-      } else if (ch === "\\") {
+      } else if (char === "\\") {
         escaped = true;
-      } else if (ch === '"') {
+      } else if (char === '"') {
         break;
       } else {
-        value += ch;
+        value += char;
       }
-      i += 1;
+      index += 1;
     }
 
     if (!value.trim()) return null;
@@ -100,11 +99,7 @@ function unwrapAnswerFromJsonBlock(text: string): string {
 
   const tryParseEscaped = (candidate: string): string | null => {
     try {
-      const unescaped = candidate
-        .replace(/\\"/g, '"')
-        .replace(/\\n/g, "\n")
-        .replace(/\\t/g, " ")
-        .trim();
+      const unescaped = candidate.replace(/\\"/g, '"').replace(/\\n/g, "\n").replace(/\\t/g, " ").trim();
       const parsed = JSON.parse(unescaped) as { answer?: unknown };
       if (typeof parsed.answer === "string" && parsed.answer.trim()) {
         return parsed.answer.trim();
@@ -151,7 +146,13 @@ function describeMarketMood(market: MarketSnapshot, signals: RadarSignal[]) {
   const moodPieces: string[] = [];
   if (niftyMove || sensexMove) {
     moodPieces.push(
-      `The market tone is ${niftyMove && sensexMove ? `Nifty ${niftyMove} and Sensex ${sensexMove}` : niftyMove ? `Nifty is ${niftyMove}` : `Sensex is ${sensexMove}`}.`
+      `The market tone is ${
+        niftyMove && sensexMove
+          ? `Nifty ${niftyMove} and Sensex ${sensexMove}`
+          : niftyMove
+            ? `Nifty is ${niftyMove}`
+            : `Sensex is ${sensexMove}`
+      }.`
     );
   }
 
@@ -168,109 +169,119 @@ function describeMarketMood(market: MarketSnapshot, signals: RadarSignal[]) {
   return moodPieces.join(" ");
 }
 
-function buildFallbackChatAnswer(
-  latestUser: string,
-  options: { ticker?: string | null; market: MarketSnapshot; signals: RadarSignal[] }
-) {
+function makeSteps(...steps: ChatReasoningStep[]) {
+  return steps;
+}
+
+function buildFallbackChatAnswer(latestUser: string, options: { ticker?: string | null; market: MarketSnapshot; signals: RadarSignal[] }) {
   const lower = latestUser.toLowerCase();
   const ticker = options.ticker;
   const mood = describeMarketMood(options.market, options.signals);
 
   if (lower.includes("buy") || lower.includes("hold") || lower.includes("wait")) {
     return {
-      answer:
-        `${mood} If you are deciding whether to buy, hold, or wait, prefer a staged approach: keep a cash buffer, add only if the thesis is clear, and avoid moving all at once on a single headline.`,
-      suggested: [
-        "What risk should I check first?",
-        "How do I stage an entry?",
-      ],
+      answer: `${mood} If you are deciding whether to buy, hold, or wait, prefer a staged approach: keep a cash buffer, add only if the thesis is clear, and avoid moving all at once on a single headline.`,
+      suggested: ["What risk should I check first?", "How do I stage an entry?"],
+      reasoningSteps: makeSteps(
+        { label: "Market Context", detail: mood },
+        { label: "Decision Lens", detail: "A staged entry reduces timing risk when the signal still needs confirmation." },
+        { label: "Risk Check", detail: "Protect against headline-driven reversals by keeping cash buffer and position sizing disciplined." }
+      ),
     };
   }
 
   if (lower.includes("market mood") || lower.includes("current market") || lower.includes("nifty")) {
     return {
-      answer:
-        `${mood} Stay selective, keep position sizes modest, and let price action confirm the thesis before adding risk.`,
-      suggested: [
-        "Which sectors look strongest?",
-        "What should I avoid right now?",
-      ],
+      answer: `${mood} Stay selective, keep position sizes modest, and let price action confirm the thesis before adding risk.`,
+      suggested: ["Which sectors look strongest?", "What should I avoid right now?"],
+      reasoningSteps: makeSteps(
+        { label: "Market Context", detail: mood },
+        { label: "Interpretation", detail: "Index tone and top signals are mixed enough that confirmation matters more than speed." },
+        { label: "Risk Check", detail: "Avoid oversizing until leadership and follow-through improve." }
+      ),
     };
   }
 
   if (lower.includes("portfolio") || lower.includes("risk") || lower.includes("overlap")) {
     return {
-      answer:
-        "For portfolio risk, check three things first: concentration in one stock or sector, overlap across funds, and whether your cash buffer is large enough for the next 6 months. If one bucket is dominating, reduce size before adding new ideas.",
-      suggested: [
-        "How do I reduce overlap?",
-        "What is a healthy portfolio split?",
-      ],
+      answer: "For portfolio risk, check three things first: concentration in one stock or sector, overlap across funds, and whether your cash buffer is large enough for the next 6 months. If one bucket is dominating, reduce size before adding new ideas.",
+      suggested: ["How do I reduce overlap?", "What is a healthy portfolio split?"],
+      reasoningSteps: makeSteps(
+        { label: "Portfolio Lens", detail: "Concentration, overlap, and liquidity usually matter before stock selection tweaks." },
+        { label: "Interpretation", detail: "A portfolio becomes fragile when one exposure can dominate outcomes." },
+        { label: "Risk Check", detail: "Reduce oversized exposures before adding fresh risk." }
+      ),
     };
   }
 
   if (lower.includes("fund") || lower.includes("large cap") || lower.includes("mutual fund")) {
     return {
-      answer:
-        "For large-cap fund research, focus on 3 things: low expense ratio, long-term consistency versus benchmark, and low overlap with the rest of your portfolio. If you want a shortlist, study index funds and stable flexi-cap funds before chasing short-term winners.",
-      suggested: [
-        "How do I compare large cap funds?",
-        "What should I check before investing in a fund?",
-      ],
+      answer: "For large-cap fund research, focus on 3 things: low expense ratio, long-term consistency versus benchmark, and low overlap with the rest of your portfolio. If you want a shortlist, study index funds and stable flexi-cap funds before chasing short-term winners.",
+      suggested: ["How do I compare large cap funds?", "What should I check before investing in a fund?"],
+      reasoningSteps: makeSteps(
+        { label: "Fund Lens", detail: "Cost, consistency, and overlap are usually more durable than recent outperformance." },
+        { label: "Interpretation", detail: "A fund that duplicates existing holdings often adds less value than investors expect." },
+        { label: "Risk Check", detail: "Avoid picking a fund only because of recent returns." }
+      ),
     };
   }
 
   if (lower.includes("sip")) {
     return {
-      answer:
-        "If your emergency fund is in place and your cash flow is comfortable, increasing your SIP by 10% to 15% is a sensible long-term move. If money is tight, keep the SIP unchanged for now and revisit it after one or two months.",
-      suggested: [
-        "How should I size my SIP increase?",
-        "What is the safest way to invest a bonus?",
-      ],
+      answer: "If your emergency fund is in place and your cash flow is comfortable, increasing your SIP by 10% to 15% is a sensible long-term move. If money is tight, keep the SIP unchanged for now and revisit it after one or two months.",
+      suggested: ["How should I size my SIP increase?", "What is the safest way to invest a bonus?"],
+      reasoningSteps: makeSteps(
+        { label: "Cash Flow Lens", detail: "SIP increases work best when emergency reserves and monthly cash flow are already healthy." },
+        { label: "Interpretation", detail: "A moderate step-up is usually safer than a sudden large jump." },
+        { label: "Risk Check", detail: "Do not stretch a SIP increase if it weakens your monthly buffer." }
+      ),
     };
   }
 
   if (lower.includes("xirr")) {
     return {
-      answer:
-        "XIRR is the annualized return that accounts for when you invested and when you withdrew. It is usually more useful than simple CAGR for portfolios with multiple cash flows.",
-      suggested: [
-        "How is XIRR different from CAGR?",
-        "Can you explain portfolio overlap?",
-      ],
+      answer: "XIRR is the annualized return that accounts for when you invested and when you withdrew. It is usually more useful than simple CAGR for portfolios with multiple cash flows.",
+      suggested: ["How is XIRR different from CAGR?", "Can you explain portfolio overlap?"],
+      reasoningSteps: makeSteps(
+        { label: "Definition", detail: "XIRR handles irregular cash flows, unlike CAGR." },
+        { label: "Interpretation", detail: "It is the more relevant return measure for SIPs and portfolios with additions over time." },
+        { label: "Risk Check", detail: "Do not compare XIRR directly with point-to-point returns without matching the cash-flow pattern." }
+      ),
     };
   }
 
   if (lower.includes("budget") || lower.includes("tax")) {
     return {
-      answer:
-        "For Budget or tax changes, first separate noise from impact. Check whether the change affects equity, debt, or retirement savings, then estimate the rupee impact on your own holdings before making any move.",
-      suggested: [
-        "How does this affect my SIP?",
-        "Should I change anything now?",
-      ],
+      answer: "For Budget or tax changes, first separate noise from impact. Check whether the change affects equity, debt, or retirement savings, then estimate the rupee impact on your own holdings before making any move.",
+      suggested: ["How does this affect my SIP?", "Should I change anything now?"],
+      reasoningSteps: makeSteps(
+        { label: "Policy Lens", detail: "Not every announcement creates a real portfolio impact." },
+        { label: "Interpretation", detail: "The useful step is translating the rule into a rupee impact on your actual holdings." },
+        { label: "Risk Check", detail: "Avoid changing allocations before the practical effect is clear." }
+      ),
     };
   }
 
   if (lower.includes("sector") || lower.includes("industry")) {
     return {
-      answer:
-        `${mood} For sector questions, compare earnings momentum, valuation comfort, and capital allocation discipline. Strong sectors usually have both earnings support and reasonable expectations.`,
-      suggested: [
-        "Which sector is most defensive?",
-        "Where is the risk highest?",
-      ],
+      answer: `${mood} For sector questions, compare earnings momentum, valuation comfort, and capital allocation discipline. Strong sectors usually have both earnings support and reasonable expectations.`,
+      suggested: ["Which sector is most defensive?", "Where is the risk highest?"],
+      reasoningSteps: makeSteps(
+        { label: "Market Context", detail: mood },
+        { label: "Sector Lens", detail: "The best sectors typically combine earnings support with reasonable valuation expectations." },
+        { label: "Risk Check", detail: "Avoid sectors where expectations are already too rich for the underlying earnings trend." }
+      ),
     };
   }
 
   return {
-    answer:
-      `${mood}${ticker ? ` If you are focused on ${ticker}, keep the thesis simple and verify the quote before acting.` : " For any new position, size it slowly, keep a cash buffer, and verify the thesis before acting."}`,
-    suggested: [
-      "What is the current market mood?",
-      "Should I buy, hold, or wait?",
-    ],
+    answer: `${mood}${ticker ? ` If you are focused on ${ticker}, keep the thesis simple and verify the quote before acting.` : " For any new position, size it slowly, keep a cash buffer, and verify the thesis before acting."}`,
+    suggested: ["What is the current market mood?", "Should I buy, hold, or wait?"],
+    reasoningSteps: makeSteps(
+      { label: "Market Context", detail: mood },
+      { label: "Interpretation", detail: ticker ? `${ticker} should be evaluated in the context of live price, signal flow, and portfolio fit.` : "The next step is to narrow the question into market, stock, or portfolio context." },
+      { label: "Risk Check", detail: "Size gradually and verify the thesis before acting on a fresh signal." }
+    ),
   };
 }
 
@@ -307,30 +318,34 @@ async function safeMarketData() {
 export async function POST(req: NextRequest) {
   const ip = getIP(req);
   if (!rateLimit(ip, 5, 60_000)) {
-    return Response.json(
-      { error: "Too many requests. Please wait a minute." },
-      { status: 429 }
-    );
+    const fallback = buildFallbackChatAnswer("market update", {
+      ticker: null,
+      market: { nifty: null, sensex: null, usdInr: null, gold: null },
+      signals: [],
+    });
+    return NextResponse.json({
+      answer: fallback.answer,
+      suggested: fallback.suggested,
+      sources: [],
+      reasoningSteps: fallback.reasoningSteps,
+    });
   }
 
   try {
     const body = (await req.json()) as ChatRequestBody;
-    const MAX_MSG_LENGTH = 600;
-    const MAX_MESSAGES = 10;
+    const maxMessageLength = 600;
+    const maxMessages = 10;
     const rawMessages = body.messages || [];
-    const messages = rawMessages.slice(-MAX_MESSAGES).map((message) => ({
+    const messages = rawMessages.slice(-maxMessages).map((message) => ({
       role: message.role,
-      content: String(message.content).slice(0, MAX_MSG_LENGTH),
+      content: String(message.content).slice(0, maxMessageLength),
     }));
 
-    if (
-      messages.some((message) =>
-        INJECTION_PATTERNS.some((pattern) => pattern.test(message.content))
-      )
-    ) {
+    if (messages.some((message) => INJECTION_PATTERNS.some((pattern) => pattern.test(message.content)))) {
       return NextResponse.json({ error: "Invalid input." }, { status: 400 });
     }
-    const latestUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+
+    const latestUser = [...messages].reverse().find((message) => message.role === "user")?.content || "";
     const extractedTicker = body.focusTicker || extractTickerFromText(latestUser);
 
     const [market, signals, tickerQuote] = await Promise.all([
@@ -338,8 +353,8 @@ export async function POST(req: NextRequest) {
       loadSignals(),
       extractedTicker ? getStockQuote(extractedTicker).catch(() => null) : Promise.resolve(null),
     ]);
-    const ticker = tickerQuote ? extractedTicker : null;
 
+    const ticker = tickerQuote ? extractedTicker : null;
     const relevant = pickRelevantSignals(signals, latestUser);
     const context = buildMarketContext({
       market,
@@ -347,7 +362,7 @@ export async function POST(req: NextRequest) {
       signals: relevant.length ? relevant : signals.slice(0, 3),
     });
 
-    let ai: { answer: string; suggested: string[] } | null = null;
+    let ai: { answer: string; suggested: string[]; reasoningSteps: ChatReasoningStep[] } | null = null;
     try {
       ai = await generateChatJSON(
         `User conversation:
@@ -371,7 +386,8 @@ ${JSON.stringify(
 
     const fallback = buildFallbackChatAnswer(latestUser, { ticker, market, signals });
     const answer = ai?.answer?.trim() ? unwrapAnswerFromJsonBlock(ai.answer) : fallback.answer;
-    const suggested = Array.isArray(ai?.suggested) && ai?.suggested.length > 0 ? ai.suggested : fallback.suggested;
+    const suggested = Array.isArray(ai?.suggested) && ai.suggested.length > 0 ? ai.suggested : fallback.suggested;
+    const reasoningSteps = Array.isArray(ai?.reasoningSteps) && ai.reasoningSteps.length > 0 ? ai.reasoningSteps.slice(0, 4) : fallback.reasoningSteps;
 
     const payload: ChatResponsePayload = {
       answer,
@@ -382,6 +398,7 @@ ${JSON.stringify(
         includePortfolio: Boolean(body.portfolioContext),
         ticker,
       }),
+      reasoningSteps,
     };
 
     return NextResponse.json(payload);
@@ -397,6 +414,7 @@ ${JSON.stringify(
         answer: fallback.answer,
         suggested: fallback.suggested,
         sources: [],
+        reasoningSteps: fallback.reasoningSteps,
       },
       { status: 200 }
     );

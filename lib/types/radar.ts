@@ -41,6 +41,10 @@ export interface RadarSignal {
   targetPrice?: number;
   stopLoss?: number;
   reasoning: string;
+  whySignal?: string;
+  whyItMatters?: string;
+  changeSummary?: string;
+  signalScore?: number;
   catalysts: string[];
   risks: string[];
   eventDate?: string;

@@ -1,19 +1,16 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
-  MessageCircleMore,
   Zap,
   TrendingUp,
   Shield,
   BookOpen,
-  X,
 } from "lucide-react";
 import BlurText from "@/components/BlurText";
-import ChatDrawer from "@/components/ChatDrawer";
+import MarketMoodIndicator from "@/components/MarketMoodIndicator";
 
 const sectionMotion = {
   initial: { opacity: 0, y: 40 },
@@ -36,9 +33,10 @@ const navItems = [
   { label: "My Portfolio", href: "/xray" },
   { label: "Features", href: "/#features" },
   { label: "Markets", href: "/radar" },
+  { label: "Watchlist", href: "/watchlist" },
   { label: "Protect", href: "/scamcheck" },
   { label: "Learn", href: "/newbies" },
-  { label: "Chat ✦", href: "/chat" },
+  { label: "Chat", href: "/chat" },
 ] as const;
 
 const tools = [
@@ -112,7 +110,7 @@ const tools = [
     title: "My Briefing",
     heading: "Your daily edge, delivered in 60 seconds.",
     description:
-      "A personalized AI briefing every morning — top movers, SEBI alerts, bulk deals, and portfolio-specific signals distilled into a scannable digest. No noise, only what matters to you.",
+      "A personalized AI briefing every morning - top movers, SEBI alerts, bulk deals, and portfolio-specific signals distilled into a scannable digest. No noise, only what matters to you.",
     chips: ["Daily Digest", "Portfolio-Aware", "SEBI Alerts", "Top Movers"],
     button: "Open My Briefing",
     href: "/briefing",
@@ -123,8 +121,8 @@ const tools = [
     title: "SIP Tools",
     heading: "Plan your SIPs like a pro.",
     description:
-      "SIP Time Machine, Goal Calculator, and Portfolio Stress Test help you model past performance, plan future contributions, and understand crash resilience with confidence.",
-    chips: ["SIP Time Machine", "Goal Calculator", "Portfolio Stress Test"],
+      "SIP Time Machine, Goal Calculator, Portfolio Stress Test, and the What-If Simulator help you model past performance, plan future contributions, and compare alternate allocation paths with confidence.",
+    chips: ["SIP Time Machine", "Goal Calculator", "Portfolio Stress Test", "What-If Simulator"],
     button: "Open SIP Tools",
     href: "/sip",
     reverse: true,
@@ -140,6 +138,17 @@ const tools = [
     href: "/intelligence",
     reverse: false,
     visual: <IntelligenceVisual />,
+  },
+  {
+    title: "AI Market Video Engine",
+    heading: "Turn live market data into short market videos.",
+    description:
+      "Generate 30 to 90 second market wraps, Radar-alert videos, top-mover briefs, and FII/DII-style explainers with AI narration, scene scripts, and animated browser-native previews.",
+    chips: ["Daily Wrap", "Radar Alerts", "Top Movers", "FII / DII Flow"],
+    button: "Open Video Engine",
+    href: "/videos",
+    reverse: true,
+    visual: <VideoEngineVisual />,
   },
 ];
 
@@ -165,17 +174,6 @@ const testimonials = [
 ];
 
 export default function Home() {
-  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
-  const [hasPortfolioContext, setHasPortfolioContext] = useState(false);
-
-  useEffect(() => {
-    try {
-      setHasPortfolioContext(Boolean(localStorage.getItem("xray_result")));
-    } catch {
-      setHasPortfolioContext(false);
-    }
-  }, []);
-
   return (
     <main className="bg-black overflow-x-hidden">
         <Navbar />
@@ -183,7 +181,7 @@ export default function Home() {
 
       <motion.section className="py-16 text-center" {...sectionMotion}>
         <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-6">
-          14 Crore+ demat accounts &nbsp;·&nbsp; 9 AI tools &nbsp;·&nbsp; Real BSE/NSE/SEBI data &nbsp;·&nbsp; 100% free
+          14 Crore+ demat accounts &nbsp;·&nbsp; 11 investor tools &nbsp;·&nbsp; Real BSE/NSE/SEBI data &nbsp;·&nbsp; 100% free
         </span>
         <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 px-6 text-2xl md:text-3xl font-heading italic text-white">
           <span>BSE</span>
@@ -199,7 +197,7 @@ export default function Home() {
       <section id="features" className="py-24 px-6 md:px-16 lg:px-24 bg-black">
         <motion.div className="text-center mb-16" {...sectionMotion}>
           <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-4">
-            All Nine Tools
+            Expanded Toolkit
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.9]">
             Pro intelligence. Zero jargon.
@@ -345,21 +343,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <button
-        onClick={() => setChatDrawerOpen((open) => !open)}
-        className="fixed right-4 top-1/2 -translate-y-1/2 z-[999] liquid-glass-strong inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-emerald-300 shadow-2xl shadow-black/40 border border-emerald-400/30 bg-emerald-500/10 backdrop-blur-xl hover:border-emerald-400/50 hover:bg-emerald-500/15 transition-all"
-        aria-label={chatDrawerOpen ? "Close AI Assistant" : "Open AI Assistant"}
-      >
-        {hasPortfolioContext && !chatDrawerOpen && (
-          <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-pulse" />
-        )}
-        <span className={hasPortfolioContext ? "text-emerald-400 animate-pulse" : ""}>
-          {chatDrawerOpen ? <X className="w-4 h-4" /> : <MessageCircleMore className="w-4 h-4" />}
-        </span>
-        <span>Ask AI</span>
-      </button>
-
-      <ChatDrawer isOpen={chatDrawerOpen} onClose={() => setChatDrawerOpen(false)} />
     </main>
   );
 }
@@ -370,7 +353,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <div className="justify-self-start flex items-center gap-2 text-white">
           <span className="text-xl font-heading italic">ET InvestIQ</span>
-          <span className="text-emerald-400 text-xs">●</span>
+          <span className="text-emerald-400 text-xs">•</span>
         </div>
 
         <div className="justify-self-center liquid-glass rounded-full px-2 py-2 flex gap-1">
@@ -379,7 +362,7 @@ function Navbar() {
               key={item.label}
               href={item.href}
               className={`text-sm font-medium px-4 py-1.5 rounded-full transition font-body ${
-                item.label === "Chat ✦"
+                item.label === "Chat"
                   ? "text-emerald-300 hover:bg-emerald-500/15"
                   : "text-white/80 hover:bg-white/10"
               }`}
@@ -416,7 +399,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0, duration: 0.7, ease: "easeOut" }}
         >
-          🇮🇳 Built for Indian Retail Investors
+          Built for Indian Retail Investors
         </motion.span>
 
         <motion.div
@@ -467,6 +450,15 @@ function Hero() {
           >
             Analyse My Portfolio <ArrowUpRight className="w-5 h-5" />
           </Link>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.35, duration: 0.7, ease: "easeOut" }}
+          className="mx-auto mt-6 max-w-xl"
+        >
+          <MarketMoodIndicator compact />
         </motion.div>
       </div>
 
@@ -642,7 +634,7 @@ function BriefingVisual() {
       {[
         { type: "Top Mover", ticker: "TATASTEEL", detail: "+4.2% on bulk deal signal", color: "text-emerald-400" },
         { type: "SEBI Alert", ticker: "Circular", detail: "New MF expense ratio cap effective Q1", color: "text-yellow-400" },
-        { type: "Portfolio", ticker: "HDFCMF", detail: "Expense drag up 0.08% — review", color: "text-red-400" },
+        { type: "Portfolio", ticker: "HDFCMF", detail: "Expense drag up 0.08% - review", color: "text-red-400" },
       ].map((item) => (
         <div key={item.ticker} className="liquid-glass rounded-xl px-3 py-2.5">
           <div className="flex items-center justify-between">
@@ -661,15 +653,19 @@ function SIPToolsVisual() {
     <div className="liquid-glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-white font-body text-sm">SIP Tools</p>
-        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">Time machine + goals + stress</span>
+        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">Time machine + goals + stress + what-if</span>
       </div>
       <div className="h-24 flex items-end gap-1">
         {[22, 28, 24, 35, 30, 44, 38, 52, 46, 60, 55, 72].map((h, i) => (
           <div key={i} className="flex-1 rounded-sm bg-emerald-400/70" style={{ height: `${h}%` }} />
         ))}
       </div>
+      <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 px-3 py-2">
+        <p className="text-[10px] uppercase tracking-wide text-emerald-300 font-body">Subfeature</p>
+        <p className="text-white text-sm font-body mt-1">What-If Simulator compares actual vs shifted corpus paths.</p>
+      </div>
       <div className="grid grid-cols-3 gap-2 text-center">
-        {[["₹12L", "Invested"], ["₹21.4L", "Final Value"], ["78%", "Total Return"]].map(([val, label]) => (
+        {[["Rs 12L", "Invested"], ["Rs 21.4L", "Final Value"], ["78%", "Total Return"]].map(([val, label]) => (
           <div key={label} className="liquid-glass rounded-xl py-2">
             <p className="text-white font-heading italic text-base">{val}</p>
             <p className="text-white/50 text-[10px] font-body mt-0.5">{label}</p>
@@ -748,6 +744,29 @@ function IntelligenceVisual() {
            </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function VideoEngineVisual() {
+  return (
+    <div className="liquid-glass rounded-2xl p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-white font-body text-sm">AI Video Engine</p>
+        <span className="liquid-glass rounded-full px-2 py-0.5 text-[10px] text-white/60 font-body">30-90 sec</span>
+      </div>
+      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+        <p className="text-[10px] uppercase tracking-wide text-emerald-300 font-body">Scene 1</p>
+        <p className="mt-2 text-xl font-heading italic text-white">Daily Market Wrap</p>
+        <p className="mt-2 text-sm text-white/65 font-body">Nifty, top signals, and action points in one auto-generated short.</p>
+      </div>
+      <div className="flex gap-2">
+        {["Hook", "Signals", "CTA"].map((label) => (
+          <div key={label} className="flex-1 rounded-xl bg-white/5 px-3 py-3 text-center">
+            <p className="text-[10px] uppercase tracking-wide text-white/40">{label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

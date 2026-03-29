@@ -14,6 +14,12 @@ export interface ChatSource {
   url?: string;
   publisher?: string;
   type: "market" | "radar" | "portfolio" | "regulatory" | "price";
+  snippet?: string;
+}
+
+export interface ChatReasoningStep {
+  label: string;
+  detail: string;
 }
 
 export interface ChatRequestBody {
@@ -26,4 +32,5 @@ export interface ChatResponsePayload {
   answer: string;
   suggested: string[];
   sources: ChatSource[];
+  reasoningSteps: ChatReasoningStep[];
 }

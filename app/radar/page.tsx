@@ -5,22 +5,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, Info, Calendar, Search, Filter, Radar, Bookmark, X, RefreshCw } from 'lucide-react';
 import SignalCard from '@/components/SignalCard';
 import PageHeader from '@/components/PageHeader';
+import { staggerContainer, staggerItem } from '@/lib/motion';
+import { STORAGE_KEYS, readStoredJson, writeStoredJson } from '@/lib/storage';
+import { getRadarPortfolioImpact, RadarPortfolioSnapshot } from '@/lib/radar/portfolioImpact';
+import { RadarResponse, RadarSignal } from '@/lib/types/radar';
 
 const SIGNAL_TYPES = ['bulk_deal', 'insider_buy', 'breakout', 'earnings_surprise', 'sector_rotation'];
-const WATCHLIST_KEY = 'et_investiq_watchlist';
+const WATCHLIST_KEY = STORAGE_KEYS.watchlist;
 
 function loadWatchlist(): string[] {
-  if (typeof window === 'undefined') return [];
-  try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]'); }
-  catch { return []; }
+  return readStoredJson<string[]>(WATCHLIST_KEY) ?? [];
 }
 
 function saveWatchlist(ids: string[]) {
-  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(ids));
+  writeStoredJson(WATCHLIST_KEY, ids);
 }
 
 export default function RadarPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<RadarResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<string | null>(null);
@@ -30,8 +32,14 @@ export default function RadarPage() {
   const [selectedConviction, setSelectedConviction] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [portfolioSnapshot, setPortfolioSnapshot] = useState<RadarPortfolioSnapshot | null>(null);
 
-  useEffect(() => { setWatchlist(loadWatchlist()); }, []);
+  useEffect(() => {
+    setWatchlist(loadWatchlist());
+    const detailedSnapshot = readStoredJson<RadarPortfolioSnapshot>(STORAGE_KEYS.xrayResult);
+    const lightSnapshot = readStoredJson<RadarPortfolioSnapshot>(STORAGE_KEYS.portfolioContext);
+    setPortfolioSnapshot(detailedSnapshot ?? lightSnapshot ?? null);
+  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -39,11 +47,12 @@ export default function RadarPage() {
     try {
       const res = await fetch('/api/radar');
       if (!res.ok) throw new Error('Failed to fetch signals');
-      const jsonData = await res.json();
+      const jsonData = (await res.json()) as RadarResponse;
       setData(jsonData);
       setLastFetchedAt(jsonData.generatedAt || new Date().toISOString());
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch signals';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -70,16 +79,16 @@ export default function RadarPage() {
   const filteredSignals = useMemo(() => {
     if (!data?.signals) return [];
     let signals = data.signals;
-    if (activeTab === 'watchlist') signals = signals.filter((s: any) => watchlist.includes(s.id));
+    if (activeTab === 'watchlist') signals = signals.filter((s) => watchlist.includes(s.id));
     if (search.trim()) {
       const q = search.toLowerCase();
-      signals = signals.filter((s: any) =>
+      signals = signals.filter((s) =>
         s.ticker.toLowerCase().includes(q) || s.companyName.toLowerCase().includes(q) || (s.sector?.toLowerCase() || '').includes(q)
       );
     }
     if (selectedConviction.length > 0) {
-      signals = signals.filter((signal: any) => {
-        const confidencePct = signal.riskLevel === "low" ? 38 : signal.conviction === "high" ? 82 : 61;
+      signals = signals.filter((signal) => {
+        const confidencePct = signal.signalScore ?? (signal.riskLevel === "low" ? 38 : signal.conviction === "high" ? 82 : 61);
         return selectedConviction.some((filter) =>
           filter === "LOW"
             ? signal.riskLevel === "low" || confidencePct < 40
@@ -92,6 +101,14 @@ export default function RadarPage() {
   }, [data, search, selectedConviction, selectedTypes, activeTab, watchlist]);
 
   const activeFilterCount = selectedConviction.length + selectedTypes.length;
+  const portfolioMatches = useMemo(
+    () =>
+      filteredSignals.filter((signal) => {
+        const impact = getRadarPortfolioImpact(signal, portfolioSnapshot);
+        return impact.status === 'direct' || impact.status === 'thematic';
+      }).length,
+    [filteredSignals, portfolioSnapshot]
+  );
   const fetchedAgo = useMemo(() => {
     if (!lastFetchedAt) return "just now";
     const diffMs = Date.now() - new Date(lastFetchedAt).getTime();
@@ -219,6 +236,34 @@ export default function RadarPage() {
               )}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="liquid-glass rounded-2xl p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Portfolio Impact</p>
+                <p className="mt-2 text-2xl font-bold text-white">{portfolioMatches}</p>
+                <p className="mt-1 text-xs text-white/60">
+                  {portfolioSnapshot
+                    ? "signals in the current view map to your latest X-Ray snapshot"
+                    : "run X-Ray to see which signals touch your holdings"}
+                </p>
+              </div>
+              <div className="liquid-glass rounded-2xl p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Portfolio Context</p>
+                <p className="mt-2 text-sm font-bold text-white">
+                  {portfolioSnapshot ? "Loaded from X-Ray" : "Not loaded"}
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                  {portfolioSnapshot
+                    ? "Radar is now highlighting direct and thematic overlaps for each signal."
+                    : "Upload or run Portfolio X-Ray once to personalize this feed."}
+                </p>
+              </div>
+              <div className="liquid-glass rounded-2xl p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Signal Finder</p>
+                <p className="mt-2 text-sm font-bold text-white">What changed, why it matters, and whether it hits your portfolio</p>
+                <p className="mt-1 text-xs text-white/60">This keeps Radar aligned with the challenge brief instead of showing raw headlines.</p>
+              </div>
+            </div>
+
             {/* Signals Grid */}
             <div className="space-y-5">
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -324,13 +369,18 @@ export default function RadarPage() {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {filteredSignals.map((signal: any, i: number) => (
-                    <motion.div key={signal.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-                      <SignalCard signal={signal} isWatchlisted={watchlist.includes(signal.id)} onWatchlistToggle={toggleWatchlist} />
+                <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredSignals.map((signal: RadarSignal) => (
+                    <motion.div key={signal.id} variants={staggerItem}>
+                      <SignalCard
+                        signal={signal}
+                        isWatchlisted={watchlist.includes(signal.id)}
+                        onWatchlistToggle={toggleWatchlist}
+                        portfolioImpact={getRadarPortfolioImpact(signal, portfolioSnapshot)}
+                      />
                     </motion.div>
                   ))}
-                </div>
+                </motion.div>
               )}
             </div>
 

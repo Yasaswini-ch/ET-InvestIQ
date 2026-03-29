@@ -1,6 +1,14 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import type { TooltipProps } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+
+interface FundXirrRow {
+  name: string;
+  xirr: number;
+  fullName: string;
+}
 
 function shortName(name: string) {
   return name
@@ -10,8 +18,23 @@ function shortName(name: string) {
     .trim();
 }
 
-export default function FundXIRRBarChart({ data }: { data: any[] }) {
-  const chartData = data.map((fund) => ({
+function FundXirrTooltip({ active, payload }: TooltipProps<ValueType, NameType>) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  const entry = payload[0];
+  const value = typeof entry.value === "number" ? entry.value : Number(entry.value ?? 0);
+  const rawPayload = entry.payload as FundXirrRow | undefined;
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#050816] px-3 py-2 shadow-2xl">
+      <p className="text-xs font-semibold text-white">{rawPayload?.fullName ?? "Fund"}</p>
+      <p className="mt-1 text-xs text-emerald-300">{value.toFixed(2)}% XIRR</p>
+    </div>
+  );
+}
+
+export default function FundXIRRBarChart({ data }: { data: Array<{ name: string; xirr: number }> }) {
+  const chartData: FundXirrRow[] = data.map((fund) => ({
     name: shortName(fund.name),
     xirr: fund.xirr,
     fullName: fund.name,
@@ -38,17 +61,7 @@ export default function FundXIRRBarChart({ data }: { data: any[] }) {
             tickLine={false}
             width={150}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#000000",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "8px",
-              fontSize: "12px",
-              color: "#ffffff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-            }}
-            formatter={(value: number, _name, item: any) => [`${value.toFixed(2)}%`, item.payload.fullName]}
-          />
+          <Tooltip content={<FundXirrTooltip />} />
           <Bar dataKey="xirr" radius={[0, 6, 6, 0]}>
             {chartData.map((entry) => (
               <Cell

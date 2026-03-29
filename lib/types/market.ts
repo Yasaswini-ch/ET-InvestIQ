@@ -30,6 +30,23 @@ export interface ChartPatternInsight {
   successRate: number;
   explanation: string;
   riskNote: string;
+  invalidationLevel?: number;
+  rewardToRisk?: number;
+  sampleSize?: number;
+  averageReturn?: number;
+  horizonDays?: number;
+}
+
+export interface HistoricalEdge {
+  setupLabel: string;
+  sampleSize: number;
+  winRate: number;
+  averageReturn: number;
+  medianReturn: number;
+  maxDrawdown: number;
+  horizonDays: number;
+  invalidationLevel: number;
+  rewardToRisk: number;
 }
 
 export interface ChartPatternResponse {
@@ -49,5 +66,6 @@ export interface ChartPatternResponse {
   };
   patterns: ChartPatternInsight[];
   similarHistorical: string[];
+  historicalEdge: HistoricalEdge;
   generatedAt: string;
 }

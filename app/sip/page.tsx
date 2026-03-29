@@ -13,6 +13,7 @@ import {
 import {
   AlertCircle,
   ArrowRight,
+  ArrowUpRight,
   CalendarClock,
   CheckCircle2,
   ChevronDown,
@@ -28,11 +29,13 @@ import {
   TrendingDown,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import SIPWhatIfSimulator from "@/components/SIPWhatIfSimulator";
 import { formatINR } from "@/lib/formatCurrency";
 import { samplePortfolio } from "@/lib/samplePortfolio";
 import { SipOptimizerResponse, SipRiskAppetite } from "@/lib/sipOptimizer";
+import { STORAGE_KEYS } from "@/lib/storage";
 
-type TabName = "timemachine" | "goal" | "stress";
+type TabName = "timemachine" | "goal" | "stress" | "whatif";
 
 type PortfolioFund = {
   name: string;
@@ -179,7 +182,9 @@ function parsePortfolioContext(value: unknown): PortfolioContext | null {
 function loadPortfolioContext(): PortfolioContext | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem("xray_result");
+    const raw =
+      localStorage.getItem(STORAGE_KEYS.xrayResult) ??
+      localStorage.getItem(STORAGE_KEYS.legacyXrayResult);
     return raw ? parsePortfolioContext(JSON.parse(raw)) : null;
   } catch {
     return null;
@@ -389,6 +394,45 @@ export default function SIPPage() {
         description="Model historical SIP performance, plan goal-based investing, and stress-test your portfolio through market crashes."
       />
 
+      <div className="liquid-glass rounded-2xl border border-white/10 p-5 space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {[
+            "SIP Time Machine",
+            "Goal Calculator",
+            "Portfolio Stress Test",
+            "What-If Simulator",
+          ].map((label) => (
+            <span
+              key={label}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium border ${
+                label === "What-If Simulator"
+                  ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+                  : "border-white/10 bg-white/5 text-white/60"
+              }`}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-center rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300">New SIP Subfeature</p>
+            <h2 className="mt-1 text-xl font-heading italic text-white">Portfolio What-If Simulator</h2>
+            <p className="mt-2 text-sm text-white/65 max-w-2xl">
+              Compare your actual corpus path against a shifted allocation scenario without leaving SIP Tools.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab("whatif")}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-medium text-black hover:bg-emerald-400"
+          >
+            Open What-If
+            <ArrowUpRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
       <div className="flex border-b border-white/10 overflow-x-auto">
         <TabButton active={activeTab === "timemachine"} onClick={() => setActiveTab("timemachine")}>
           SIP Time Machine
@@ -398,6 +442,9 @@ export default function SIPPage() {
         </TabButton>
         <TabButton active={activeTab === "stress"} onClick={() => setActiveTab("stress")}>
           Portfolio Stress Test
+        </TabButton>
+        <TabButton active={activeTab === "whatif"} onClick={() => setActiveTab("whatif")}>
+          What-If Simulator
         </TabButton>
       </div>
 
@@ -413,8 +460,10 @@ export default function SIPPage() {
             <SIPTimeMachine />
           ) : activeTab === "goal" ? (
             <GoalCalculator portfolioContext={portfolioContext} />
-          ) : (
+          ) : activeTab === "stress" ? (
             <StressTest portfolioContext={portfolioContext} />
+          ) : (
+            <SIPWhatIfSimulator />
           )}
         </motion.div>
       </AnimatePresence>

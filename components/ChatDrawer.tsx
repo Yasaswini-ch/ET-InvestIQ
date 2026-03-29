@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, SendHorizonal } from "lucide-react";
+import { STORAGE_KEYS, readStoredJson } from "@/lib/storage";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -12,21 +13,17 @@ type ChatMessage = {
 type ChatDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
+  focusTrigger?: number;
 };
 
-const PORTFOLIO_CONTEXT_KEY = "xray_result";
-
 function readPortfolioContext(): Record<string, unknown> | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(PORTFOLIO_CONTEXT_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
-  } catch {
-    return null;
-  }
+  return (
+    readStoredJson<Record<string, unknown>>(STORAGE_KEYS.xrayResult) ??
+    readStoredJson<Record<string, unknown>>(STORAGE_KEYS.legacyXrayResult)
+  );
 }
 
-export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
+export default function ChatDrawer({ isOpen, onClose, focusTrigger = 0 }: ChatDrawerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +38,11 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
     setPortfolioContext(context);
     setHasPortfolioContext(Boolean(context));
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    window.setTimeout(() => textareaRef.current?.focus(), 120);
+  }, [isOpen, focusTrigger]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -78,18 +80,14 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
         }),
       });
 
-      const payload = (await res.json().catch(() => null)) as
-        | { answer?: string; error?: string }
-        | null;
-
-      const assistantMessage: ChatMessage = {
-        role: "assistant",
-        content:
-          res.ok
-            ? payload?.answer || "I could not generate a response. Please retry."
-            : payload?.error || "I could not generate a response. Please retry.",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const payload = (await res.json().catch(() => null)) as { answer?: string; error?: string } | null;
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: res.ok ? payload?.answer || "I could not generate a response. Please retry." : payload?.error || "I could not generate a response. Please retry.",
+        },
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -136,18 +134,12 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
           >
             <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h2 className="font-heading italic text-white text-lg">✦ AI Assistant</h2>
+                <h2 className="font-heading italic text-white text-lg">AI Assistant</h2>
                 {hasPortfolioContext && (
-                  <span className="text-emerald-400 text-xs font-semibold uppercase tracking-widest">
-                    Portfolio-aware
-                  </span>
+                  <span className="text-emerald-400 text-xs font-semibold uppercase tracking-widest">Portfolio-aware</span>
                 )}
               </div>
-              <button
-                onClick={onClose}
-                className="liquid-glass rounded-lg p-2 text-white/60 hover:text-white transition-colors"
-                aria-label="Close assistant"
-              >
+              <button onClick={onClose} className="liquid-glass rounded-lg p-2 text-white/60 hover:text-white transition-colors" aria-label="Close assistant">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -155,16 +147,10 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center gap-5 px-4">
-                  <p className="text-white/20 text-sm leading-relaxed">
-                    Ask anything about markets, your portfolio, or a stock.
-                  </p>
+                  <p className="text-white/20 text-sm leading-relaxed">Ask anything about markets, your portfolio, or a stock.</p>
                   <div className="flex flex-col gap-2 w-full">
                     {suggestionChips.map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() => void submitMessage(chip)}
-                        className="liquid-glass rounded-full px-3 py-2 text-xs text-white/50 cursor-pointer hover:text-white transition-colors text-left"
-                      >
+                      <button key={chip} onClick={() => void submitMessage(chip)} className="liquid-glass rounded-full px-3 py-2 text-xs text-white/50 cursor-pointer hover:text-white transition-colors text-left">
                         {chip}
                       </button>
                     ))}
@@ -173,17 +159,8 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
               ) : (
                 <>
                   {messages.map((message, index) => (
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-body leading-relaxed whitespace-pre-wrap ${
-                          message.role === "user"
-                            ? "bg-white/10 rounded-br-sm text-white"
-                            : "liquid-glass rounded-bl-sm text-white/90"
-                        }`}
-                      >
+                    <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-body leading-relaxed whitespace-pre-wrap ${message.role === "user" ? "bg-white/10 rounded-br-sm text-white" : "liquid-glass rounded-bl-sm text-white/90"}`}>
                         {message.content}
                       </div>
                     </div>
@@ -215,12 +192,7 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
                   placeholder="Ask anything..."
                   className="flex-1 bg-white/5 rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-white/30 outline-none resize-none border border-white/10 focus:border-white/20 transition"
                 />
-                <button
-                  onClick={() => void submitMessage()}
-                  disabled={!canSubmit}
-                  className="liquid-glass-strong rounded-xl p-2.5 text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Send message"
-                >
+                <button onClick={() => void submitMessage()} disabled={!canSubmit} className="liquid-glass-strong rounded-xl p-2.5 text-white disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Send message">
                   <SendHorizonal className="w-4 h-4" />
                 </button>
               </div>
@@ -231,3 +203,4 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
     </AnimatePresence>
   );
 }
+

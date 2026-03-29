@@ -1,10 +1,13 @@
+import { STORAGE_KEYS } from "@/lib/storage";
+
 export function getInvestorName(): string {
   if (typeof window === "undefined") return "Investor";
-  return localStorage.getItem("investor_name") ?? "Investor";
+  return localStorage.getItem(STORAGE_KEYS.investorName) ?? localStorage.getItem("investor_name") ?? "Investor";
 }
 
 export function setInvestorName(name: string): void {
   if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEYS.investorName, name);
   localStorage.setItem("investor_name", name);
 }
 

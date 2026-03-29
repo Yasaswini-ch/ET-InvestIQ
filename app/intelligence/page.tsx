@@ -7,6 +7,7 @@ import LayerShell from "@/components/Intelligence/LayerShell";
 import Layer1Budget from "@/components/Intelligence/Layer1Budget";
 import Layer2Promoters from "@/components/Intelligence/Layer2Promoters";
 import Layer3StayCourse from "@/components/Intelligence/Layer3StayCourse";
+import { STORAGE_KEYS } from "@/lib/storage";
 
 type IntelligencePageState = {
   hasError: boolean;
@@ -54,7 +55,9 @@ export default function IntelligencePage() {
   const [portfolioContext, setPortfolioContext] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem("xray_result");
+    const raw =
+      localStorage.getItem(STORAGE_KEYS.xrayResult) ??
+      localStorage.getItem(STORAGE_KEYS.legacyXrayResult);
     if (raw) {
       try {
         setPortfolioContext(JSON.parse(raw));

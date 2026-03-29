@@ -18,6 +18,7 @@ export function buildSources({
       title: "Yahoo Finance - Live Nifty / Sensex snapshot",
       publisher: "Yahoo",
       type: "market",
+      snippet: "Used for live index levels, intraday direction, and broad market tone.",
     },
   ];
 
@@ -26,6 +27,7 @@ export function buildSources({
       title: `Yahoo Finance - ${ticker} quote`,
       publisher: "Yahoo",
       type: "price",
+      snippet: `Used for the latest ${ticker} price context and near-term move.`,
     });
   }
 
@@ -37,6 +39,7 @@ export function buildSources({
       url: src.url,
       publisher: src.publisher,
       type: src.publisher === "SEBI" ? "regulatory" : "radar",
+      snippet: `${signal.companyName}: ${signal.headline}`,
     });
   }
 
@@ -45,6 +48,7 @@ export function buildSources({
       title: "Portfolio X-Ray context from latest analysis",
       type: "portfolio",
       publisher: "ET InvestIQ",
+      snippet: "Used to tailor the answer to the investor's current portfolio context.",
     });
   }
 

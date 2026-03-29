@@ -80,6 +80,11 @@ export default function ChartsPage() {
             supportZones={data.summary.supportZones}
             resistanceZones={data.summary.resistanceZones}
             volumeSpike={data.summary.volumeSpike}
+            setupLabel={data.historicalEdge.setupLabel}
+            winRate={data.historicalEdge.winRate}
+            sampleSize={data.historicalEdge.sampleSize}
+            averageReturn={data.historicalEdge.averageReturn}
+            horizonDays={data.historicalEdge.horizonDays}
           />
           <OhlcvChart
             candles={data.candles}
@@ -95,13 +100,36 @@ export default function ChartsPage() {
           </div>
           {Array.isArray(data.similarHistorical) && data.similarHistorical.length > 0 && (
             <div className="liquid-glass rounded-2xl p-5">
-              <h3 className="text-sm font-bold text-white mb-3">Similar Historical Patterns</h3>
+              <h3 className="text-sm font-bold text-white mb-3">Stock-Specific Historical Edge</h3>
               <div className="space-y-2">
                 {data.similarHistorical.map((line, idx) => (
                   <p key={idx} className="text-sm text-white/80 leading-relaxed">
                     {line}
                   </p>
                 ))}
+              </div>
+              <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-white/45">Median Move</p>
+                  <p className="mt-1 text-sm font-bold text-white">
+                    {data.historicalEdge.medianReturn >= 0 ? "+" : ""}
+                    {data.historicalEdge.medianReturn}%
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-white/45">Max Drawdown</p>
+                  <p className="mt-1 text-sm font-bold text-white">-{data.historicalEdge.maxDrawdown}%</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-white/45">Invalidation</p>
+                  <p className="mt-1 text-sm font-bold text-white">
+                    {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(data.historicalEdge.invalidationLevel)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-white/45">Reward / Risk</p>
+                  <p className="mt-1 text-sm font-bold text-white">{data.historicalEdge.rewardToRisk}:1</p>
+                </div>
               </div>
             </div>
           )}

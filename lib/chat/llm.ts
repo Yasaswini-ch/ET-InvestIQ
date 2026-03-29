@@ -3,6 +3,7 @@ import { generateStructuredJSON } from "@/lib/gemini";
 type ChatAiResponse = {
   answer: string;
   suggested: string[];
+  reasoningSteps: { label: string; detail: string }[];
 };
 
 type OpenRouterChoice = {
@@ -42,6 +43,15 @@ function parseJsonLenient(text: string): ChatAiResponse | null {
     return {
       answer: parsed.answer,
       suggested: parsed.suggested.filter((item): item is string => typeof item === "string"),
+      reasoningSteps: Array.isArray(parsed.reasoningSteps)
+        ? parsed.reasoningSteps.filter(
+            (item): item is { label: string; detail: string } =>
+              Boolean(item) &&
+              typeof item === "object" &&
+              typeof (item as { label?: unknown }).label === "string" &&
+              typeof (item as { detail?: unknown }).detail === "string"
+          )
+        : [],
     };
   } catch {
     const firstBrace = clean.indexOf("{");
@@ -56,6 +66,15 @@ function parseJsonLenient(text: string): ChatAiResponse | null {
         return {
           answer: parsed.answer,
           suggested: parsed.suggested.filter((item): item is string => typeof item === "string"),
+          reasoningSteps: Array.isArray(parsed.reasoningSteps)
+            ? parsed.reasoningSteps.filter(
+                (item): item is { label: string; detail: string } =>
+                  Boolean(item) &&
+                  typeof item === "object" &&
+                  typeof (item as { label?: unknown }).label === "string" &&
+                  typeof (item as { detail?: unknown }).detail === "string"
+              )
+            : [],
         };
       } catch {
         return null;
@@ -113,6 +132,7 @@ async function generateWithOpenRouter(
       return {
         answer: content.trim(),
         suggested: ["What should I watch next?", "How should I size risk here?"],
+        reasoningSteps: [],
       };
     }
     if (parsed) {
