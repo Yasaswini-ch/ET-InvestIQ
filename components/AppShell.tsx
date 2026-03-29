@@ -125,6 +125,23 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       <main className={isLanding ? "" : "pt-24 pb-16 px-6 md:px-12 lg:px-16 max-w-7xl mx-auto"}>{children}</main>
 
+      {!isLanding && (
+        <footer className="border-t border-white/10 px-6 py-6 text-xs text-white/45 no-print">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+            <p>ET InvestIQ is for informational use only and is not SEBI-registered investment advice.</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href="/privacy" className="hover:text-white/70">Privacy</Link>
+              <Link href="/terms" className="hover:text-white/70">Terms</Link>
+              <Link href="/data-use" className="hover:text-white/70">How We Use Data</Link>
+              <Link href="/status" className="hover:text-white/70">Status</Link>
+              <a href="https://github.com/Yasaswini-ch/ET-InvestIQ/issues" target="_blank" rel="noreferrer" className="hover:text-white/70">
+                Report an issue
+              </a>
+            </div>
+          </div>
+        </footer>
+      )}
+
       {!isChatPage && (
         <>
           <div className="fixed right-4 top-1/2 -translate-y-1/2 z-[999] no-print">

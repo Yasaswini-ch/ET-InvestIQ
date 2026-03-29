@@ -17,6 +17,9 @@ import {
   ChevronUp,
 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
+import LiveDataStatus from "@/components/LiveDataStatus";
+import MethodologyCard from "@/components/MethodologyCard";
+import RiskNotice from "@/components/RiskNotice";
 import ScoreRing from "@/components/ScamShield/ScoreRing";
 import RedFlagList from "@/components/ScamShield/RedFlagList";
 import VolumeAnomalyCard from "@/components/ScamShield/VolumeAnomalyCard";
@@ -175,6 +178,39 @@ export default function ScamCheckPage() {
         description="Paste suspicious tips one by one or in bulk. ET InvestIQ will score the risk and explain the red flags."
         action={<Shield className="w-8 h-8 text-emerald-400" />}
       />
+
+      <LiveDataStatus
+        label="Scam analysis status"
+        timestamp={result?.analyzedAt ?? null}
+        fallbackUsed={false}
+      />
+
+      <RiskNotice
+        title="Scam probability is a risk screen, not a legal determination"
+        body="Scam Shield highlights language and behavior patterns associated with manipulative or non-compliant promotions. It should not be read as proof of fraud or a substitute for SEBI verification."
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <MethodologyCard
+          title="What scam probability means"
+          summary="The score estimates how closely a message resembles known high-risk solicitation patterns."
+          bullets={[
+            'High scores usually combine urgency, guaranteed return claims, unregistered advisor language, or payment solicitation.',
+            'Lower scores do not guarantee safety; they only mean fewer known scam patterns were detected.',
+            'SEBI verification and source checks still matter before acting on any investment message.',
+          ]}
+        />
+        <MethodologyCard
+          title="How to interpret score ranges"
+          summary="Treat the result as a risk band rather than hard advice."
+          bullets={[
+            '0-25: low visible scam signals',
+            '26-50: lighter caution zone',
+            '51-74: suspicious enough to verify carefully',
+            '75-100: high-risk pattern match that should be treated very carefully',
+          ]}
+        />
+      </div>
 
       {(sharedContext.score || sharedContext.verdict) && (
         <div className="liquid-glass rounded-2xl border border-amber-400/20 p-4 text-sm text-white/75">

@@ -4,7 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "@/components/PageHeader";
 import ExportPdfButton from "@/components/ExportPdfButton";
+import LiveDataStatus from "@/components/LiveDataStatus";
 import MarketMoodIndicator from "@/components/MarketMoodIndicator";
+import MethodologyCard from "@/components/MethodologyCard";
+import RiskNotice from "@/components/RiskNotice";
 import { ArrowRight, BarChart3, BrainCircuit, Clock3, ExternalLink, LineChart, Radar, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { STORAGE_KEYS } from "@/lib/storage";
 
@@ -21,6 +24,7 @@ interface BriefingAlert {
 
 interface Briefing {
   generatedAt: string;
+  fallbackUsed?: boolean;
   investorName: string;
   marketMood: string;
   moodEmoji?: string;
@@ -112,6 +116,29 @@ export default function BriefingPage() {
       <div className="max-w-xl">
         <MarketMoodIndicator compact />
       </div>
+
+      <LiveDataStatus
+        label="Briefing refresh"
+        timestamp={briefing?.generatedAt ?? null}
+        fallbackUsed={Boolean(briefing?.fallbackUsed)}
+        staleMessage="This briefing is using delayed or fallback context. Review linked sources and modules before making portfolio changes."
+        onRetry={generateBriefing}
+      />
+
+      <RiskNotice
+        title="Briefings summarize what to review next"
+        body="Alerts are generated to help prioritize your attention. They may reference your portfolio when available, but they are still informational and should be verified in the linked product modules."
+      />
+
+      <MethodologyCard
+        title="How ET InvestIQ builds this briefing"
+        summary="The briefing combines available portfolio context with current market mood and the most relevant investor actions."
+        bullets={[
+          "If X-Ray data exists, alerts are biased toward holdings and portfolio issues.",
+          "If portfolio data is missing or live context fails, a deterministic market-wide fallback briefing is still returned.",
+          "Linked modules such as Radar, Charts, and X-Ray are the places to verify the underlying signal.",
+        ]}
+      />
 
       {!briefing && !loading && (
         <div className="liquid-glass rounded-2xl p-8 text-center border border-white/10">

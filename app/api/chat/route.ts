@@ -19,6 +19,8 @@ const SYSTEM = `You are ET Markets AI - India's smartest investment assistant.
 Rules:
 - Use the provided live market context and events first.
 - Mention risk in every response.
+- Do not tell the user to buy or sell immediately.
+- Frame all output as informational, not investment advice.
 - Keep the answer under 260 words.
 - Use concise bullets when useful.
 - Return JSON only:
@@ -385,7 +387,16 @@ ${JSON.stringify(
     }
 
     const fallback = buildFallbackChatAnswer(latestUser, { ticker, market, signals });
-    const answer = ai?.answer?.trim() ? unwrapAnswerFromJsonBlock(ai.answer) : fallback.answer;
+    let answer = ai?.answer?.trim() ? unwrapAnswerFromJsonBlock(ai.answer) : fallback.answer;
+    answer = answer
+      .replace(/\b(buy this now|sell this now|strong buy|strong sell)\b/gi, "review this carefully")
+      .trim();
+    if (body.portfolioContext && !/portfolio-aware/i.test(answer)) {
+      answer = `${answer} This is portfolio-aware context based on your latest snapshot and may still be imperfect.`;
+    }
+    if (!/informational/i.test(answer) && !/not investment advice/i.test(answer)) {
+      answer = `${answer} This is informational and not investment advice.`;
+    }
     const suggested = Array.isArray(ai?.suggested) && ai.suggested.length > 0 ? ai.suggested : fallback.suggested;
     const reasoningSteps = Array.isArray(ai?.reasoningSteps) && ai.reasoningSteps.length > 0 ? ai.reasoningSteps.slice(0, 4) : fallback.reasoningSteps;
 

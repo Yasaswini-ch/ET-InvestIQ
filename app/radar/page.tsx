@@ -3,8 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, Info, Calendar, Search, Filter, Radar, Bookmark, X, RefreshCw } from 'lucide-react';
+import LiveDataStatus from '@/components/LiveDataStatus';
+import MethodologyCard from '@/components/MethodologyCard';
 import SignalCard from '@/components/SignalCard';
 import PageHeader from '@/components/PageHeader';
+import RiskNotice from '@/components/RiskNotice';
 import { staggerContainer, staggerItem } from '@/lib/motion';
 import { STORAGE_KEYS, readStoredJson, writeStoredJson } from '@/lib/storage';
 import { getRadarPortfolioImpact, RadarPortfolioSnapshot } from '@/lib/radar/portfolioImpact';
@@ -164,6 +167,40 @@ export default function RadarPage() {
           </div>
         }
       />
+
+      <LiveDataStatus
+        label="Radar feed"
+        timestamp={lastFetchedAt}
+        fallbackUsed={Boolean(data?.sourceStatus && Object.values(data.sourceStatus).some((status) => status !== 'ok'))}
+        staleMessage="One or more exchange or regulatory feeds are delayed. Treat Radar as research support and verify the cited source before acting."
+        onRetry={fetchData}
+      />
+
+      <RiskNotice
+        title="Radar surfaces research candidates, not direct buy or sell instructions"
+        body="Conviction labels and signal scores show how notable an event looks for further research. They should not be treated as guaranteed outcomes or personalized trade advice."
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <MethodologyCard
+          title="How conviction score is computed"
+          summary="Radar blends event strength, risk penalties, and price context into a normalized signal score."
+          bullets={[
+            'Bulk deals, earnings surprises, and stronger market structure start with higher base weights.',
+            'Riskier setups are penalized before the score is clamped into a research range.',
+            'Higher score means higher research priority, not certainty of returns.',
+          ]}
+        />
+        <MethodologyCard
+          title="How to read signal ranges"
+          summary="The score is meant to rank which signals deserve attention first."
+          bullets={[
+            '75+ means high-priority research.',
+            '55-74 means actionable but still needs confirmation.',
+            'Below 55 means early-watch or lower-conviction context.',
+          ]}
+        />
+      </div>
 
       <AnimatePresence mode="wait">
         {isLoading ? (

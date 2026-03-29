@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Plus, Search, RefreshCcw } from "lucide-react";
+import LiveDataStatus from "@/components/LiveDataStatus";
 import PageHeader from "@/components/PageHeader";
+import RiskNotice from "@/components/RiskNotice";
 import { formatCurrencyINR } from "@/lib/currency";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { STORAGE_KEYS, readStoredJson, writeStoredJson } from "@/lib/storage";
@@ -89,6 +91,19 @@ export default function WatchlistPage() {
       <PageHeader
         title="Watchlist"
         description="Track your favourite tickers and surface Radar signals against them automatically."
+      />
+
+      <LiveDataStatus
+        label="Watchlist signals"
+        timestamp={data?.generatedAt ?? null}
+        fallbackUsed={Boolean(data?.fallbackUsed || error)}
+        staleMessage="Quote or Radar feeds are delayed. Prices and active signal badges may be stale until the next successful refresh."
+        onRetry={() => void loadSignals()}
+      />
+
+      <RiskNotice
+        title="Watchlist is a monitoring layer"
+        body="Watchlist badges highlight activity worth reviewing. They are not recommendations and should be checked against live exchange data before you act."
       />
 
       <div className="liquid-glass rounded-2xl border border-white/10 p-5">

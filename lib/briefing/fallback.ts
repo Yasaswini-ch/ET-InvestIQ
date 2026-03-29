@@ -70,6 +70,7 @@ export function buildBriefingFallback(portfolioContext: PortfolioContext) {
 
   return {
     generatedAt: new Date().toISOString(),
+    fallbackUsed: true,
     investorName,
     marketMood: hasPortfolio ? "Measured and Selective" : "Balanced and Observant",
     headline: hasPortfolio
@@ -84,4 +85,3 @@ export function buildBriefingFallback(portfolioContext: PortfolioContext) {
       : "Run X-Ray to personalize the briefing to your holdings.",
   };
 }
-

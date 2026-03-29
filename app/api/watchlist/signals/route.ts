@@ -21,6 +21,8 @@ function convictionScore(value: "high" | "medium"): number {
 
 function buildFallbackResponse(symbols: string[]): WatchlistSignalsResponse {
   return {
+    generatedAt: new Date().toISOString(),
+    fallbackUsed: true,
     tickers: symbols.map((symbol, index) => ({
       symbol,
       price: 1000 + index * 125,
@@ -41,7 +43,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 12);
 
     if (!symbols.length) {
-      return NextResponse.json({ tickers: [] } satisfies WatchlistSignalsResponse);
+      return NextResponse.json({ tickers: [], generatedAt: new Date().toISOString(), fallbackUsed: false } satisfies WatchlistSignalsResponse);
     }
 
     const normalized = symbols.map((symbol) => normalizeNseTicker(symbol));
@@ -65,6 +67,8 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.json({
+        generatedAt: new Date().toISOString(),
+        fallbackUsed: false,
         tickers: normalized.map((symbol, index) => {
           const compactSymbol = symbol.replace(".NS", "");
           const matchedSignals = (signalMap.get(compactSymbol) ?? []).slice(0, 2);
@@ -85,6 +89,8 @@ export async function GET(req: NextRequest) {
       } satisfies WatchlistSignalsResponse);
     } catch {
       return NextResponse.json({
+        generatedAt: new Date().toISOString(),
+        fallbackUsed: true,
         tickers: normalized.map((symbol, index) => {
           const quote = quotes[index];
           return {

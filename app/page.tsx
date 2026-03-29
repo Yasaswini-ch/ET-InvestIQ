@@ -291,11 +291,14 @@ export default function Home() {
       <section className="py-24 px-6 md:px-16 lg:px-24 bg-black">
         <motion.div {...sectionMotion}>
           <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block mb-4">
-            Early Users
+            Illustrative Examples
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.9]">
-            Investors who tried it, stayed.
+            Example investor outcomes this product is designed for.
           </h2>
+          <p className="mt-4 max-w-2xl text-sm text-white/55 font-body">
+            These are illustrative scenarios, not verified real-user testimonials.
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
@@ -335,9 +338,10 @@ export default function Home() {
               © 2026 ET InvestIQ - Not SEBI registered. For informational use only.
             </p>
             <div className="flex items-center gap-4 text-xs text-white/40 font-body">
-              <Link href="/help" className="hover:text-white/60 transition">Privacy</Link>
-              <Link href="/help" className="hover:text-white/60 transition">Terms</Link>
-              <Link href="/help" className="hover:text-white/60 transition">GitHub</Link>
+              <Link href="/privacy" className="hover:text-white/60 transition">Privacy</Link>
+              <Link href="/terms" className="hover:text-white/60 transition">Terms</Link>
+              <Link href="/data-use" className="hover:text-white/60 transition">How We Use Data</Link>
+              <a href="https://github.com/Yasaswini-ch/ET-InvestIQ/issues" target="_blank" rel="noreferrer" className="hover:text-white/60 transition">Report an issue</a>
             </div>
           </footer>
         </motion.div>

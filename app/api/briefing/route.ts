@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         throw new Error("Invalid briefing payload");
       }
 
+      briefing.fallbackUsed = false;
       return Response.json(briefing);
     } catch (aiError) {
       console.error("Briefing AI fallback used:", aiError);
@@ -95,4 +96,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Failed to generate briefing" }, { status: 500 });
   }
 }
-

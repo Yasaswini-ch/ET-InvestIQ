@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import html2canvas from "html2canvas";
 import { ChevronLeft, ChevronRight, Clapperboard, Copy, Download, FileJson, FileText, Loader2, Pause, Play, RefreshCcw, Volume2 } from "lucide-react";
+import LiveDataStatus from "@/components/LiveDataStatus";
+import MethodologyCard from "@/components/MethodologyCard";
 import PageHeader from "@/components/PageHeader";
+import RiskNotice from "@/components/RiskNotice";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { VideoBriefResponse, VideoTemplate } from "@/lib/types/video";
 
@@ -273,6 +276,29 @@ export default function VideosPage() {
         title="AI Market Video Engine"
         description="Auto-generate short, visually rich market update videos from live context, ranked signals, and AI-generated narration."
         action={<Clapperboard className="w-8 h-8 text-emerald-300" />}
+      />
+
+      <LiveDataStatus
+        label="Video brief context"
+        timestamp={brief?.generatedAt ?? null}
+        fallbackUsed={Boolean(brief?.fallbackUsed)}
+        staleMessage="This video brief is using fallback or delayed market context. Review the attached sources before sharing or acting on it."
+        onRetry={() => void generate()}
+      />
+
+      <RiskNotice
+        title="Video summaries are informational content, not trade calls"
+        body="These clips are generated from available market context and ranked signals. They are meant to explain what changed, not to replace source verification or investment judgment."
+      />
+
+      <MethodologyCard
+        title="How the video engine builds a market brief"
+        summary="Templates combine current market context with top ranked signals and then turn them into a scene-by-scene short video plan."
+        bullets={[
+          "Live context is preferred when available, but a deterministic fallback brief is always returned if feeds or AI are delayed.",
+          "The generated output includes scenes, narration, source links, captions, and storyboard metadata.",
+          "A polished export does not imply the underlying claim is verified; always inspect the attached sources.",
+        ]}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">

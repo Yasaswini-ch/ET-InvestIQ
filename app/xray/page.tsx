@@ -24,6 +24,7 @@ import FundDetailsTable from "@/components/FundDetailsTable";
 import { formatCompactINR, formatINR } from "@/lib/utils";
 import ShareCard from "@/components/ShareCard";
 import ExportPdfButton from "@/components/ExportPdfButton";
+import RiskNotice from "@/components/RiskNotice";
 import { STORAGE_KEYS } from "@/lib/storage";
 
 export default function XRayPage() {
@@ -31,6 +32,13 @@ export default function XRayPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revealStep, setRevealStep] = useState(0);
+
+  const clearStoredPortfolioData = () => {
+    localStorage.removeItem(STORAGE_KEYS.portfolioContext);
+    localStorage.removeItem(STORAGE_KEYS.xrayResult);
+    localStorage.removeItem(STORAGE_KEYS.legacyXrayResult);
+    setAnalysis(null);
+  };
 
   const handleFileChange = async (file: File | null, useSample: boolean) => {
     if (!file && !useSample) return;
@@ -106,6 +114,20 @@ export default function XRayPage() {
         description="Upload your CAS statement (CAMS/KFintech) to get a comprehensive AI-driven analysis of your mutual fund portfolio."
         action={<ExportPdfButton />}
       />
+
+      <RiskNotice
+        title="Portfolio uploads are used to personalize analysis"
+        body="In this build, your X-Ray result and portfolio context are stored locally in the browser so Radar, Chat, SIP Tools, and Briefing can personalize follow-up analysis. Use the button below if you want to clear that local portfolio context."
+      />
+
+      <div className="flex justify-end">
+        <button
+          onClick={clearStoredPortfolioData}
+          className="rounded-xl border border-white/10 px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5"
+        >
+          Delete my portfolio data
+        </button>
+      </div>
 
       <div className="print-header print-only">ET InvestIQ Portfolio X-Ray Report</div>
 
@@ -222,7 +244,7 @@ function UploadZone({
         </div>
         <h3 className="text-lg font-bold text-white mb-2">Drop your CAS PDF here</h3>
         <p className="text-white/60 text-center text-sm mb-7 max-w-xs leading-relaxed">
-          Your statement remains private. We only extract data for analysis and do not store your files.
+          Your statement remains private in this demo flow. We analyze the uploaded file and keep the resulting portfolio context in your browser so connected features can personalize follow-up analysis.
         </p>
 
         <input

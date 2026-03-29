@@ -238,6 +238,9 @@ export default function ChatPage() {
                     </div>
                     {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
                       <div className="mt-2 space-y-2 max-w-full">
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-300">
+                          Portfolio-aware output may be imperfect. <a href={msg.sources[0]?.url || "#"} target={msg.sources[0]?.url ? "_blank" : undefined} rel={msg.sources[0]?.url ? "noreferrer" : undefined} className="hover:text-emerald-200 underline underline-offset-2">Verify sources</a>
+                        </div>
                         {Array.isArray(msg.reasoningSteps) && msg.reasoningSteps.length > 0 && (
                           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
                             <div className="mb-2 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">

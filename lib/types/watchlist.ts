@@ -14,4 +14,6 @@ export interface WatchlistTicker {
 
 export interface WatchlistSignalsResponse {
   tickers: WatchlistTicker[];
+  generatedAt?: string;
+  fallbackUsed?: boolean;
 }
