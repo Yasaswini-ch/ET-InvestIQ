@@ -20,14 +20,14 @@ ET InvestIQ solves that by acting as an intelligence layer across the full inves
 
 ## What ET InvestIQ Covers
 
-The platform now maps strongly to the core challenge pillars:
+The platform maps strongly to the four challenge-aligned pillars:
 
 1. Opportunity Radar
 2. Chart Pattern Intelligence
 3. Market ChatGPT - Next Gen
 4. AI Market Video Engine
 
-It also adds portfolio-aware layers that make the experience feel like a real investor operating system rather than a collection of separate demos.
+It also adds portfolio-aware layers that make the experience feel like a real investor operating system rather than a collection of disconnected demos.
 
 ## Core Product Modules
 
@@ -45,6 +45,8 @@ Features:
 - AI rebalancing plan
 - share card
 - browser-native `Export PDF`
+- explicit in-app data-use notice
+- one-click `Delete my portfolio data` local purge flow
 
 Stored context:
 - writes investor portfolio context to local storage for downstream personalization
@@ -69,8 +71,12 @@ Current Radar capabilities:
 - signal score normalization
 - watchlist-aware filtering
 - portfolio-aware impact mapping
+- last-updated status banner
+- stale-feed warning when exchange or regulatory sources are delayed
+- methodology cards explaining conviction scoring
+- inline disclaimer near the high-risk signal surface
 
-New portfolio impact layer:
+Portfolio impact layer:
 - direct portfolio exposure detection from latest X-Ray snapshot
 - thematic overlap detection using fund/category context
 - explicit `no overlap` fallback instead of silent ambiguity
@@ -88,7 +94,7 @@ Features:
 - AI pattern explanations
 - stock-specific historical edge layer
 
-Historical edge layer now includes:
+Historical edge layer includes:
 - setup label
 - sample size
 - win rate
@@ -115,11 +121,12 @@ Features:
 - clear history support
 - global `/` keyboard shortcut to open assistant
 - onboarding tooltip for shortcut discovery
+- visible `Verify sources` prompt in the assistant UI
 
-Reasoning upgrades:
-- assistant responses now show structured reasoning steps
-- source cards include snippets so users can see why a source was used
-- deterministic fallback responses still include reasoning rather than collapsing to a weak generic answer
+Guardrails:
+- avoids direct buy/sell-now phrasing
+- forces informational framing in fallback and model output handling
+- explicitly notes when a response is portfolio-aware and may still be imperfect
 
 ### 5. AI Market Video Engine (`/videos`)
 
@@ -145,6 +152,8 @@ Current capabilities:
 - downloadable `.srt` captions
 - downloadable storyboard `.json`
 - deterministic fallback video brief if live data or model output fails
+- live-data status banner and fallback warning
+- inline disclaimer and methodology card on the page
 
 ### 6. Scam Shield (`/scamcheck`)
 
@@ -159,10 +168,18 @@ Features:
 - rule-based fallback scoring if model fails
 - shareable result card export
 - copy-link support with score and verdict context
+- analysis timestamp display
+- methodology cards for scam probability interpretation
+- inline disclaimer near the result surface
+
+Scam framing improvements:
+- score is presented as a risk screen, not a legal determination
+- methodology explains what high and low score bands mean
+- fallback behavior remains explicit and structured
 
 ### 7. SIP Tools (`/sip`)
 
-The SIP toolkit now includes multiple investor decision flows under one surface.
+The SIP toolkit includes multiple investor decision flows under one surface.
 
 Features:
 - SIP Time Machine
@@ -171,7 +188,7 @@ Features:
 - Portfolio What-If Simulator
 
 What-If Simulator:
-- visible as a SIP Tools subfeature
+- available as a SIP Tools tab and standalone route
 - compares shifting capital from one holding to another
 - supports `1Y`, `3Y`, `5Y`
 - plots actual vs simulated corpus using Recharts
@@ -189,6 +206,9 @@ Features:
 - market mood indicator in header
 - browser-native `Export PDF`
 - deterministic fallback payloads
+- generated timestamp and fallback state display
+- methodology card explaining how briefings are built
+- inline trust note about verification and linked modules
 
 ### 9. Intelligence Center (`/intelligence`)
 
@@ -213,8 +233,10 @@ Features:
 - search and add tickers
 - quote cards with price and change
 - active Radar badges where available
+- generated timestamp and fallback status
 - empty state guidance
 - retry and fallback handling
+- inline disclaimer for monitoring vs advice
 
 ### 11. Market Mood Indicator
 
@@ -225,6 +247,7 @@ Signals shown:
 - NIFTY move
 - VIX reading
 - FII tone
+- delayed-data label when fallback data is used
 
 ### 12. Newbie Corner (`/newbies`)
 
@@ -252,6 +275,22 @@ Current shared flow:
 
 This is where the platform becomes more than a collection of widgets.
 
+## Trust, Safety, And Reliability
+
+A major recent upgrade was making the product feel more credible and operationally trustworthy, not just feature-rich.
+
+Current trust layer includes:
+- explicit `Last updated` timestamps on live sections
+- stale-data and delayed-feed warnings
+- deterministic fallback payloads instead of blank screens
+- inline disclaimers near high-risk widgets
+- methodology cards explaining how core scores are built
+- legal/help surfaces linked in the app footer
+- public `Report an issue` link
+- AI chat guardrails for informational framing
+- portfolio-aware response caveats in chat
+- local portfolio-data deletion flow in X-Ray
+
 ## UX Highlights
 
 The app is designed to avoid dead ends and blank states.
@@ -264,6 +303,7 @@ Current UX behavior:
 - mobile-friendly layouts
 - browser-print PDF export for X-Ray and Briefing
 - global floating AI assistant access
+- app-wide footer links for privacy, terms, data use, status, and issue reporting
 
 ## Resilience And Fallbacks
 
@@ -279,6 +319,7 @@ Implemented fallback philosophy:
 - Mood route returns a valid neutral delayed-data payload
 - Watchlist route returns price-only output with empty signals if Radar data is unavailable
 - Video engine returns a fully usable fallback brief
+- Briefing falls back to a valid investor or market summary instead of erroring out
 
 ## Key Technical Features
 
@@ -297,6 +338,7 @@ Implemented fallback philosophy:
 - exchange and regulatory feed parsing
 - portfolio-context-aware prompting
 - deterministic fallback generators across modules
+- light AI response guardrail handling in chat
 
 ### State And Persistence
 - local storage keys are prefixed with `et_`
@@ -304,6 +346,17 @@ Implemented fallback philosophy:
 - watchlist stored under `et_watchlist`
 - portfolio context stored under `et_portfolio_context`
 - X-Ray result snapshot stored under `et_xray_result`
+
+## Legal And Support Pages
+
+The app now includes lightweight trust and operational pages:
+
+- `/privacy`
+- `/terms`
+- `/data-use`
+- `/status`
+
+These are plain-English demo-grade pages that make the product safer and clearer to evaluate.
 
 ## Routes
 
@@ -321,6 +374,10 @@ Implemented fallback philosophy:
 - `/watchlist`
 - `/whatif`
 - `/videos`
+- `/privacy`
+- `/terms`
+- `/data-use`
+- `/status`
 
 ### API Routes
 - `POST /api/xray`
@@ -350,9 +407,10 @@ A strong demo sequence now looks like this:
 8. Open SIP Tools and run the What-If Simulator.
 9. Open Watchlist and show Radar-linked signal badges.
 10. Open Videos and generate a market wrap or Radar alert video.
-11. Export X-Ray or Briefing to PDF.
+11. Open Privacy / Terms / Status to show product maturity.
+12. Export X-Ray or Briefing to PDF.
 
-That tells a complete story: signal discovery, portfolio impact, technical validation, conversational analysis, and content generation.
+That tells a complete story: signal discovery, portfolio impact, technical validation, conversational analysis, trust handling, and content generation.
 
 ## Why This Project Stands Out
 
@@ -363,6 +421,7 @@ What makes ET InvestIQ stronger than a typical hackathon dashboard:
 - it combines fraud detection, portfolio diagnosis, chat, charts, and video in one product
 - it prioritizes fallbacks and user trust instead of failing open
 - it now covers all four major challenge-aligned pillars, including the video engine
+- it includes visible trust features, legal pages, and data-handling clarity instead of leaving them as implied future work
 
 ## Tech Stack
 
@@ -381,7 +440,6 @@ What makes ET InvestIQ stronger than a typical hackathon dashboard:
 ## Project Docs
 
 - [STRUCTURE.md](./STRUCTURE.md)
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [API.md](./API.md)
 - [DEPLOY.md](./DEPLOY.md)
 
@@ -427,6 +485,10 @@ Recommended routes to test:
 - `/watchlist`
 - `/briefing`
 - `/videos`
+- `/privacy`
+- `/terms`
+- `/data-use`
+- `/status`
 
 ### Production build
 
@@ -441,6 +503,7 @@ npm start
 - AI outputs are still decision support, not guaranteed investment outcomes
 - browser-native video export is `.webm`, not full MP4 render pipeline yet
 - speech synthesis preview is available, but embedded narration export is not yet a full production render workflow
+- legal pages are lightweight demo-grade versions, not lawyer-reviewed production documents
 - this platform is not SEBI-registered advice software
 
 ## Disclaimer
